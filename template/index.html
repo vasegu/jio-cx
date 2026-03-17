@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Title — Jio</title>
+
+  <!-- JioType fonts -->
+  <style>
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+  </style>
+
+  <!-- Nunito fallback -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* === Jio Design Tokens === */
+    :root {
+      --jio-blue: #0F3CC9;
+      --jio-red: #DA2441;
+      --jio-deep-blue: #0a2885;
+      --jio-light-tint: #E7EBF8;
+      --jio-black: #141414;
+      --jio-grey: rgba(0,0,0,0.65);
+      --jio-border: #E0E0E0;
+      --jio-off-white: #FAFAFA;
+      --jio-white: #FFFFFF;
+      --jio-radius: 8px;
+      --jio-font: 'JioType', 'Nunito', sans-serif;
+
+      /* Chart colors */
+      --jio-saffron: #FF6F00;
+      --jio-magenta: #D9008D;
+      --jio-green: #00C853;
+      --jio-teal: #00BCD4;
+      --jio-purple: #7B1FA2;
+      --jio-gold: #FFD600;
+      --jio-coral: #FF7043;
+    }
+
+    /* === Base === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--jio-font);
+      color: var(--jio-black);
+      background: var(--jio-off-white);
+      letter-spacing: 0.02em;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === Header === */
+    .jio-header {
+      background: var(--jio-blue);
+      color: var(--jio-white);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .jio-header img { height: 32px; }
+    .jio-header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--jio-white);
+    }
+
+    /* === Main === */
+    .jio-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* === Cards === */
+    .jio-card {
+      background: var(--jio-white);
+      border-radius: var(--jio-radius);
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      transition: box-shadow 0.2s;
+    }
+    .jio-card:hover { box-shadow: 0 4px 16px rgba(15,60,201,0.12); }
+
+    /* === Buttons === */
+    .jio-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--jio-blue);
+      color: var(--jio-white);
+      border: none;
+      border-radius: var(--jio-radius);
+      padding: 10px 24px;
+      font-family: var(--jio-font);
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .jio-btn:hover { background: var(--jio-deep-blue); }
+    .jio-btn:active { transform: scale(0.98); }
+    .jio-btn--outline {
+      background: transparent;
+      border: 2px solid var(--jio-blue);
+      color: var(--jio-blue);
+    }
+    .jio-btn--outline:hover { background: var(--jio-light-tint); }
+
+    /* === Headings === */
+    h2 { color: var(--jio-blue); font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; }
+    h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 12px; }
+
+    /* === Footer === */
+    .jio-footer {
+      padding: 16px 24px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="jio-header">
+    <img src="../../brand-assets/jio-logo-blue.svg" alt="Jio">
+    <h1>Demo Title</h1>
+  </header>
+
+  <!-- Content -->
+  <main class="jio-main">
+    <div class="jio-card" style="margin-bottom: 24px;">
+      <h2>Hello, Jio</h2>
+      <p>Replace this with your demo content.</p>
+      <br>
+      <button class="jio-btn">Primary Action</button>
+      <button class="jio-btn--outline jio-btn" style="margin-left: 8px;">Secondary</button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="jio-footer">
+    Made by Accenture
+  </footer>
+
+</body>
+</html>

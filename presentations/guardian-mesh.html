@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JioGuardian Mesh — Voice-Only Parent Safety Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Jio-inspired: deep navy + vibrant blue accent */
+  --bg:              #0b0e1a;
+  --surface:         #111528;
+  --surface-2:       #181d35;
+  --surface-3:       #1f2542;
+  --border:          #2a3055;
+  --text:            #e4e6f0;
+  --text-muted:      #8b90a8;
+  --text-faint:      #565b76;
+  --accent:          #0066ff;
+  --accent-glow:     rgba(0, 102, 255, 0.35);
+  --accent-soft:     rgba(0, 102, 255, 0.12);
+  --green:           #00c48c;
+  --green-glow:      rgba(0, 196, 140, 0.35);
+  --red:             #ff4757;
+  --red-glow:        rgba(255, 71, 87, 0.3);
+  --orange:          #ffa502;
+  --orange-glow:     rgba(255, 165, 2, 0.3);
+  --purple:          #a855f7;
+  --purple-glow:     rgba(168, 85, 247, 0.3);
+  --yellow:          #ffd43b;
+  --yellow-glow:     rgba(255, 212, 59, 0.3);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --transition: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+button { cursor: pointer; font: inherit; border: none; background: none; color: inherit; }
+
+/* ═══════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════ */
+.app {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 28px 40px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.header svg { flex-shrink: 0; }
+.header-text h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.header-text p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-left: auto;
+}
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Architecture diagram: full width row */
+.arch-row {
+  margin-bottom: 20px;
+}
+
+/* 2-column grid below */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* Panels */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.panel-header svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+.panel-body {
+  padding: 18px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION A: MIC & TRANSCRIPT
+   ═══════════════════════════════════════════════════════ */
+.mic-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+.btn svg { width: 16px; height: 16px; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: #1a75ff; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary.recording {
+  background: var(--red);
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+@keyframes rec-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--red-glow); }
+  50% { box-shadow: 0 0 0 10px transparent; }
+}
+.btn-secondary {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--surface-2); border-color: var(--text-faint); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+.transcript-area {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.transcript-area:focus { border-color: var(--accent); }
+.transcript-area::placeholder { color: var(--text-faint); }
+
+.quick-tests {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quick-tests label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+  margin-bottom: 2px;
+}
+.quick-btn {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+.quick-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION B: POLICY VIEW
+   ═══════════════════════════════════════════════════════ */
+.policy-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--text-faint);
+  text-align: center;
+  font-size: 13px;
+}
+.policy-empty svg { width: 36px; height: 36px; margin-bottom: 10px; opacity: 0.3; }
+
+.policy-card {
+  display: none;
+}
+.policy-card.visible {
+  display: block;
+}
+.policy-field {
+  margin-bottom: 12px;
+}
+.policy-field:last-child { margin-bottom: 0; }
+.policy-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+.policy-value {
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  background: var(--surface-3);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  word-break: break-word;
+}
+.policy-value.highlight {
+  border-color: var(--green);
+  background: rgba(0, 196, 140, 0.06);
+}
+
+/* Tags */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 100px;
+}
+.tag-green { background: rgba(0, 196, 140, 0.15); color: var(--green); }
+.tag-red { background: rgba(255, 71, 87, 0.15); color: var(--red); }
+.tag-orange { background: rgba(255, 165, 2, 0.15); color: var(--orange); }
+.tag-purple { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+
+/* Confirmation sentence */
+.confirmation-sentence {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: rgba(0, 102, 255, 0.06);
+  border: 1px solid rgba(0, 102, 255, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  display: none;
+}
+.confirmation-sentence.visible { display: block; }
+.confirmation-sentence strong {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION C: ARCHITECTURE DIAGRAM
+   ═══════════════════════════════════════════════════════ */
+.arch-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 10px 0 16px;
+  overflow-x: auto;
+}
+.arch-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  text-align: center;
+}
+.arch-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-3);
+  border: 2px solid var(--border);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.arch-icon svg { width: 24px; height: 24px; color: var(--text-muted); transition: color 0.3s; }
+.arch-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  max-width: 90px;
+}
+.arch-arrow {
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 24px;
+}
+.arch-arrow svg { width: 24px; height: 24px; color: var(--border); transition: color 0.4s; }
+
+/* Active states */
+.arch-node.active .arch-icon {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 24px var(--accent-glow), 0 0 48px var(--accent-glow);
+}
+.arch-node.active .arch-icon svg { color: var(--accent); }
+.arch-node.active .arch-label { color: var(--accent); }
+
+/* Completed states */
+.arch-node.completed .arch-icon {
+  border-color: var(--green);
+  background: rgba(0, 196, 140, 0.08);
+  box-shadow: 0 0 12px var(--green-glow);
+}
+.arch-node.completed .arch-icon svg { color: var(--green); }
+.arch-node.completed .arch-label { color: var(--green); }
+
+/* Arrow active */
+.arch-arrow.active svg { color: var(--accent); }
+.arch-arrow.completed svg { color: var(--green); }
+
+/* Error state */
+.arch-node.error .arch-icon {
+  border-color: var(--red);
+  background: rgba(255, 71, 87, 0.08);
+  box-shadow: 0 0 12px var(--red-glow);
+}
+
+/* ═══════════════════════════════════════════════════════
+   PIPELINE LOG
+   ═══════════════════════════════════════════════════════ */
+.log-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.log-body {
+  padding: 14px 18px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.log-entry {
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+}
+.log-time {
+  color: var(--text-faint);
+  white-space: nowrap;
+  min-width: 72px;
+}
+.log-msg { color: var(--text-muted); }
+.log-msg.step-mic { color: var(--orange); }
+.log-msg.step-asr { color: var(--yellow); }
+.log-msg.step-orch { color: var(--accent); }
+.log-msg.step-api { color: var(--purple); }
+.log-msg.step-tts { color: var(--green); }
+.log-msg.step-error { color: var(--red); }
+.log-empty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════ */
+.footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.footer a:hover { color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════
+   ASR STATUS
+   ═══════════════════════════════════════════════════════ */
+.asr-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-bottom: 10px;
+}
+.asr-status .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.asr-status.unavailable .dot { background: var(--orange); }
+
+/* ═══════════════════════════════════════════════════════
+   PROCESS BUTTON
+   ═══════════════════════════════════════════════════════ */
+.process-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* Responsive adjustments for projector readability */
+@media (min-width: 1100px) {
+  .arch-icon { width: 64px; height: 64px; border-radius: 16px; }
+  .arch-icon svg { width: 28px; height: 28px; }
+  .arch-label { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="header">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-label="JioGuardian Shield Logo">
+      <rect width="36" height="36" rx="8" fill="#0066ff" fill-opacity="0.12"/>
+      <path d="M18 6L28 12V20C28 25.5 23.5 30 18 31C12.5 30 8 25.5 8 20V12L18 6Z" stroke="#0066ff" stroke-width="2" fill="none"/>
+      <circle cx="18" cy="18" r="4" fill="#0066ff" fill-opacity="0.3" stroke="#0066ff" stroke-width="1.5"/>
+      <path d="M18 14V18L20.5 20.5" stroke="#0066ff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="header-text">
+      <h1>JioGuardian Mesh</h1>
+      <p>Voice-Only Parent Safety Demo &mdash; Speak in Hindi / Hinglish</p>
+    </div>
+    <span class="badge">Live Demo</span>
+  </header>
+
+  <!-- ═══════════ ARCHITECTURE DIAGRAM (full width) ═══════════ -->
+  <div class="arch-row">
+    <!-- PANEL C: Architecture Diagram -->
+    <div class="panel">
+      <div class="panel-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Architecture — Live Pipeline
+      </div>
+      <div class="panel-body">
+        <div class="arch-diagram" id="archDiagram">
+
+          <!-- Node 1: Mic -->
+          <div class="arch-node" id="node-mic">
+            <div class="arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+            </div>
+            <div class="arch-label">Mic</div>
+          </div>
+          <div class="arch-arrow" id="arrow-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/></svg>
+          </div>
+
+          <!-- Node 2: ASR -->
+          <div class="arch-node" id="node-asr">
+            <div class="arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="arch-label">ASR</div>
+          </div>
+          <div class="arch-arrow" id="arrow-2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/></svg>
+          </div>
+
+          <!-- Node 3: Orchestrator -->
+          <div class="arch-node" id="node-orch">
+            <div class="arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <div class="arch-label">Orchestrator</div>
+          </div>
+          <div class="arch-arrow" id="arrow-3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/></svg>
+          </div>
+
+          <!-- Node 4: Guardian API -->
+          <div class="arch-node" id="node-api">
+            <div class="arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="arch-label">JioGuardian API</div>
+          </div>
+          <div class="arch-arrow" id="arrow-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="14 7 19 12 14 17"/></svg>
+          </div>
+
+          <!-- Node 5: TTS -->
+          <div class="arch-node" id="node-tts">
+            <div class="arch-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </div>
+            <div class="arch-label">TTS / Voice</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 2-COLUMN GRID ═══════════ -->
+  <div class="grid">
+
+    <!-- PANEL A: Microphone & Transcript -->
+    <div class="panel">
+      <div class="panel-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Microphone &amp; Transcript
+      </div>
+      <div class="panel-body">
+        <div class="asr-status" id="asrStatus">
+          <span class="dot"></span>
+          <span id="asrStatusText">Web Speech API available (hi-IN)</span>
+        </div>
+
+        <div class="mic-controls">
+          <button class="btn btn-primary" id="btnRecord">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg>
+            <span id="btnRecordLabel">Record</span>
+          </button>
+          <button class="btn btn-secondary" id="btnProcess">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run Pipeline
+          </button>
+        </div>
+
+        <textarea class="transcript-area" id="transcript" placeholder="Recognised speech will appear here...\nOr paste/type Hindi text and click 'Run Pipeline'."></textarea>
+
+        <div class="quick-tests">
+          <label>Quick Test Utterances</label>
+          <button class="quick-btn" data-utterance="Meri beti ke phone pe raat 10 ke baad sirf school apps aur WhatsApp family group chalne do, games aur reels band kar do.">
+            1. Policy Create &mdash; "Meri beti ke phone pe raat 10 ke baad sirf school apps aur WhatsApp family group chalne do..."
+          </button>
+          <button class="quick-btn" data-utterance="Agar woh 'help' bole ya 'dar lag raha hai' bole, turant mujhe call karo aur helpline ka option dikhao.">
+            2. Emergency Trigger &mdash; "Agar woh 'help' bole ya 'dar lag raha hai' bole..."
+          </button>
+          <button class="quick-btn" data-utterance="Ye rule hata do, abhi restrictions off kar do.">
+            3. Delete Policy &mdash; "Ye rule hata do, abhi restrictions off kar do."
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL B: Guardian Policies -->
+    <div class="panel">
+      <div class="panel-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Guardian Policies — Ananya
+      </div>
+      <div class="panel-body">
+        <div class="policy-empty" id="policyEmpty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          No active policy yet.<br>Speak or type a command to create one.
+        </div>
+        <div class="policy-card" id="policyCard">
+          <div class="policy-field">
+            <div class="policy-label">Operation</div>
+            <div class="policy-value" id="policyOp">—</div>
+          </div>
+          <div class="policy-field">
+            <div class="policy-label">Child</div>
+            <div class="policy-value" id="policyChild">Ananya</div>
+          </div>
+          <div class="policy-field">
+            <div class="policy-label">Time Window</div>
+            <div class="policy-value" id="policyTime">—</div>
+          </div>
+          <div class="policy-field">
+            <div class="policy-label">Allowed</div>
+            <div class="policy-value" id="policyAllowed"><span class="tag-list"></span></div>
+          </div>
+          <div class="policy-field">
+            <div class="policy-label">Blocked</div>
+            <div class="policy-value" id="policyBlocked"><span class="tag-list"></span></div>
+          </div>
+          <div class="policy-field">
+            <div class="policy-label">Emergency Phrases</div>
+            <div class="policy-value" id="policyEmergency"><span class="tag-list"></span></div>
+          </div>
+        </div>
+        <div class="confirmation-sentence" id="confirmationSentence">
+          <strong>Voice Confirmation (Hindi)</strong>
+          <span id="confirmationText"></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- ═══════════ PIPELINE LOG ═══════════ -->
+  <div class="log-panel">
+    <div class="panel-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      Pipeline Log
+    </div>
+    <div class="log-body" id="logBody">
+      <div class="log-entry"><span class="log-empty">Waiting for input...</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <footer class="footer">
+    JioGuardian Mesh &mdash; Workshop Demo &middot;
+    <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+  </footer>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   JioGuardian Mesh — Voice-Only Parent Safety Demo
+   All logic: ASR, intent parsing, mock backend, TTS, diagram animation.
+   Zero external dependencies. Runs in any modern browser.
+   ═══════════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  // ─────────── DOM REFS ───────────
+  const $transcript   = document.getElementById('transcript');
+  const $btnRecord    = document.getElementById('btnRecord');
+  const $btnRecordLbl = document.getElementById('btnRecordLabel');
+  const $btnProcess   = document.getElementById('btnProcess');
+  const $asrStatus    = document.getElementById('asrStatus');
+  const $asrStatusTxt = document.getElementById('asrStatusText');
+  const $policyEmpty  = document.getElementById('policyEmpty');
+  const $policyCard   = document.getElementById('policyCard');
+  const $policyOp     = document.getElementById('policyOp');
+  const $policyChild  = document.getElementById('policyChild');
+  const $policyTime   = document.getElementById('policyTime');
+  const $policyAllow  = document.getElementById('policyAllowed');
+  const $policyBlock  = document.getElementById('policyBlocked');
+  const $policyEmrg   = document.getElementById('policyEmergency');
+  const $confirmBox   = document.getElementById('confirmationSentence');
+  const $confirmTxt   = document.getElementById('confirmationText');
+  const $logBody      = document.getElementById('logBody');
+
+  // Architecture diagram nodes and arrows
+  const nodes  = ['mic', 'asr', 'orch', 'api', 'tts'];
+  const arrows = ['arrow-1', 'arrow-2', 'arrow-3', 'arrow-4'];
+
+  // ─────────── PIPELINE STATE ───────────
+  let isRecording = false;
+  let pipelineRunning = false;
+
+  // ═══════════════════════════════════════════════════════
+  // 1. MOCK JIOGUARDIAN BACKEND (in-browser state)
+  //    Simulates POST/GET/DELETE /guardian/policy
+  // ═══════════════════════════════════════════════════════
+  const GuardianAPI = {
+    _store: null,  // current policy or null
+
+    /** POST /guardian/policy — create or update */
+    createOrUpdate(policy) {
+      // Merge with existing if present
+      if (this._store && policy.operation === 'CREATE_OR_UPDATE_POLICY') {
+        this._store = {
+          ...this._store,
+          ...policy,
+          allowedCategories: policy.allowedCategories.length
+            ? policy.allowedCategories
+            : this._store.allowedCategories,
+          blockedCategories: policy.blockedCategories.length
+            ? policy.blockedCategories
+            : this._store.blockedCategories,
+          emergencyPhrases: [
+            ...new Set([
+              ...(this._store.emergencyPhrases || []),
+              ...(policy.emergencyPhrases || [])
+            ])
+          ],
+          timeWindow: policy.timeWindow || this._store.timeWindow,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        this._store = {
+          ...policy,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return { status: 200, data: this._store };
+    },
+
+    /** DELETE /guardian/policy — clear */
+    deletePolicy() {
+      this._store = null;
+      return { status: 200, data: null, message: 'Policy deleted' };
+    },
+
+    /** GET /guardian/policy — fetch current */
+    getPolicy() {
+      return { status: 200, data: this._store };
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // 2. INTENT PARSER (deterministic, no LLM needed)
+  //    Parses Hindi/Hinglish transcript → policy JSON
+  //    ── In production, replace this with a call to
+  //    Perplexity Computer or any LLM with the structured
+  //    prompt shown in the comments. ──
+  // ═══════════════════════════════════════════════════════
+
+  /**
+   * parseIntent(transcript) → { policy, confirmation }
+   *
+   * PRODUCTION NOTE: Replace this function body with an API call to your
+   * orchestrator (e.g., Perplexity Computer) using this prompt:
+   *
+   *   "You are the JioGuardian intent parser.
+   *    Given the following Hindi/Hinglish transcript from a parent,
+   *    extract a JSON policy object:
+   *    { operation, child, timeWindow, allowedCategories,
+   *      blockedCategories, emergencyPhrases }
+   *    Also return a short Hindi confirmation sentence.
+   *    Transcript: <TRANSCRIPT>"
+   *
+   * For this demo, we use keyword matching to handle the 3 sample
+   * utterances and generalise reasonably for similar inputs.
+   */
+  function parseIntent(text) {
+    const t = text.toLowerCase();
+
+    // ── Pattern 3: DELETE / remove restrictions ──
+    if (
+      t.includes('hata do') ||
+      t.includes('restrictions off') ||
+      t.includes('off kar do') ||
+      t.includes('band karo sab') ||
+      t.includes('remove') ||
+      t.includes('delete')
+    ) {
+      return {
+        policy: {
+          operation: 'DELETE_POLICY',
+          child: 'Ananya',
+          timeWindow: null,
+          allowedCategories: [],
+          blockedCategories: [],
+          emergencyPhrases: []
+        },
+        confirmation:
+          'Theek hai, Ananya ke phone se saari restrictions hata di gayi hain. Ab koi rule active nahi hai.'
+      };
+    }
+
+    // ── Pattern 2: Emergency trigger phrases ──
+    if (
+      t.includes('help') && (t.includes('bole') || t.includes('bolo')) ||
+      t.includes('dar lag') ||
+      t.includes('emergency') ||
+      t.includes('turant') && t.includes('call') ||
+      t.includes('helpline')
+    ) {
+      const phrases = [];
+      if (t.includes('help'))       phrases.push('help');
+      if (t.includes('dar lag'))    phrases.push('dar lag raha hai');
+      if (t.includes('bachao'))     phrases.push('bachao');
+      if (phrases.length === 0)     phrases.push('help', 'dar lag raha hai');
+
+      return {
+        policy: {
+          operation: 'CREATE_OR_UPDATE_POLICY',
+          child: 'Ananya',
+          timeWindow: null,
+          allowedCategories: [],
+          blockedCategories: [],
+          emergencyPhrases: phrases
+        },
+        confirmation:
+          `Samajh gaya. Agar Ananya "${phrases.join('" ya "')}" bolegi, toh turant aapko call jayega aur helpline ka option dikhega.`
+      };
+    }
+
+    // ── Pattern 1: Time-based app restrictions ──
+    // Extract time window
+    let timeWindow = null;
+    const timeMatch = t.match(/(?:raat|shaam?)\s*(\d{1,2})\s*(?:baje|ke baad)/);
+    if (timeMatch) {
+      const hour = parseInt(timeMatch[1], 10);
+      const startHour = hour <= 12 ? hour + 12 : hour; // assume PM for raat
+      // Default end = 6:00 (next morning)
+      timeWindow = {
+        start: String(startHour > 12 && hour <= 12 ? hour + 12 : hour).padStart(2, '0') + ':00',
+        end: '06:00'
+      };
+      // Fix: raat 10 should be 22:00
+      if (t.includes('raat') && hour <= 12) {
+        timeWindow.start = String(hour + 12).padStart(2, '0') + ':00';
+      }
+    }
+
+    // Extract allowed categories
+    const allowed = [];
+    if (t.includes('school app'))             allowed.push('school apps');
+    if (t.includes('whatsapp') && t.includes('family')) allowed.push('family WhatsApp group');
+    if (t.includes('whatsapp') && !t.includes('family')) allowed.push('WhatsApp');
+    if (t.includes('educational'))            allowed.push('educational apps');
+
+    // Extract blocked categories
+    const blocked = [];
+    if (t.includes('game'))   blocked.push('games');
+    if (t.includes('reel'))   blocked.push('reels');
+    if (t.includes('youtube')) blocked.push('YouTube');
+    if (t.includes('social media')) blocked.push('social media');
+    if (t.includes('instagram'))    blocked.push('Instagram');
+
+    // Build confirmation
+    let conf = 'Theek hai';
+    if (timeWindow) {
+      const sh = parseInt(timeWindow.start);
+      const startLabel = sh > 12 ? `raat ${sh - 12}` : `subah ${sh}`;
+      conf += `, ${startLabel} baje se subah 6 baje tak`;
+    }
+    if (blocked.length) conf += ` ${blocked.join(' aur ')} block ho jayenge.`;
+    if (allowed.length) conf += ` Sirf ${allowed.join(' aur ')} chalega.`;
+    if (!blocked.length && !allowed.length) conf += ', policy update ho gayi.';
+
+    return {
+      policy: {
+        operation: 'CREATE_OR_UPDATE_POLICY',
+        child: 'Ananya',
+        timeWindow: timeWindow,
+        allowedCategories: allowed,
+        blockedCategories: blocked,
+        emergencyPhrases: []
+      },
+      confirmation: conf
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 3. WEB SPEECH API (ASR)
+  //    Uses webkitSpeechRecognition / SpeechRecognition
+  //    targeting hi-IN (Hindi). Falls back to manual input.
+  // ═══════════════════════════════════════════════════════
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let asrAvailable = false;
+
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'hi-IN';       // Hindi (India)
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    asrAvailable = true;
+
+    recognition.onresult = function (e) {
+      let finalText = '';
+      let interimText = '';
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalText += e.results[i][0].transcript;
+        } else {
+          interimText += e.results[i][0].transcript;
+        }
+      }
+      $transcript.value = finalText || interimText;
+    };
+
+    recognition.onend = function () {
+      stopRecording();
+      log('ASR transcription complete.', 'step-asr');
+      activateNode('asr', true);
+    };
+
+    recognition.onerror = function (e) {
+      log('ASR error: ' + e.error, 'step-error');
+      stopRecording();
+    };
+
+    $asrStatusTxt.textContent = 'Web Speech API available (hi-IN)';
+  } else {
+    $asrStatus.classList.add('unavailable');
+    $asrStatusTxt.textContent = 'Web Speech API not available — type or paste text below';
+    $btnRecord.disabled = true;
+  }
+
+  // Record button handler
+  $btnRecord.addEventListener('click', function () {
+    if (!asrAvailable) return;
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      startRecording();
+    }
+  });
+
+  function startRecording() {
+    isRecording = true;
+    $btnRecord.classList.add('recording');
+    $btnRecordLbl.textContent = 'Stop';
+    $transcript.value = '';
+    resetDiagram();
+    clearLog();
+    log('Microphone active — listening for Hindi/Hinglish...', 'step-mic');
+    activateNode('mic');
+    try {
+      recognition.start();
+    } catch (e) {
+      // Already started, ignore
+    }
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    $btnRecord.classList.remove('recording');
+    $btnRecordLbl.textContent = 'Record';
+    completeNode('mic');
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 4. PIPELINE RUNNER
+  //    Orchestrates: transcript → parse → API → TTS
+  //    with animated diagram highlights at each step.
+  // ═══════════════════════════════════════════════════════
+
+  $btnProcess.addEventListener('click', function () {
+    if (pipelineRunning) return;
+    const text = $transcript.value.trim();
+    if (!text) {
+      log('No transcript to process. Speak or type first.', 'step-error');
+      return;
+    }
+    runPipeline(text);
+  });
+
+  async function runPipeline(text) {
+    pipelineRunning = true;
+    $btnProcess.disabled = true;
+    resetDiagram();
+    clearLog();
+
+    // Step 1: Mic (already done if recorded; simulate if typed)
+    log('Input received: "' + truncate(text, 60) + '"', 'step-mic');
+    activateNode('mic');
+    await wait(400);
+    completeNode('mic');
+    activateArrow(0);
+    await wait(300);
+
+    // Step 2: ASR complete
+    log('ASR transcript ready (' + text.length + ' chars, hi-IN).', 'step-asr');
+    activateNode('asr');
+    await wait(600);
+    completeNode('asr');
+    activateArrow(1);
+    await wait(300);
+
+    // Step 3: Orchestrator — intent parsing
+    log('Orchestrator: parsing intent from transcript...', 'step-orch');
+    activateNode('orch');
+    await wait(800); // simulate orchestrator "thinking"
+    const result = parseIntent(text);
+    log('Intent parsed → operation=' + result.policy.operation, 'step-orch');
+    log('Confirmation: "' + truncate(result.confirmation, 70) + '"', 'step-orch');
+    completeNode('orch');
+    activateArrow(2);
+    await wait(300);
+
+    // Step 4: Call mock JioGuardian API
+    log('Calling JioGuardian Policy API...', 'step-api');
+    activateNode('api');
+    await wait(600);
+
+    let apiResp;
+    if (result.policy.operation === 'DELETE_POLICY') {
+      apiResp = GuardianAPI.deletePolicy();
+      log('API response: policy deleted (200 OK).', 'step-api');
+    } else {
+      apiResp = GuardianAPI.createOrUpdate(result.policy);
+      log('API response: policy updated (200 OK).', 'step-api');
+    }
+    updatePolicyUI(apiResp.data);
+    completeNode('api');
+    activateArrow(3);
+    await wait(300);
+
+    // Step 5: TTS — speak the confirmation
+    log('TTS: speaking confirmation in Hindi...', 'step-tts');
+    activateNode('tts');
+
+    // Show confirmation text
+    $confirmTxt.textContent = result.confirmation;
+    $confirmBox.classList.add('visible');
+
+    await speakHindi(result.confirmation);
+    log('TTS complete. Pipeline finished.', 'step-tts');
+    completeNode('tts');
+
+    pipelineRunning = false;
+    $btnProcess.disabled = false;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 5. TEXT-TO-SPEECH (Hindi)
+  //    Uses browser's speechSynthesis. Tries hi-IN voice,
+  //    falls back to any available Hindi or default voice.
+  // ═══════════════════════════════════════════════════════
+
+  function speakHindi(text) {
+    return new Promise(function (resolve) {
+      if (!('speechSynthesis' in window)) {
+        log('TTS not available — showing text only.', 'step-tts');
+        resolve();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
+      // Try to find a Hindi voice
+      const voices = speechSynthesis.getVoices();
+      const hindiVoice = voices.find(function (v) {
+        return v.lang.startsWith('hi');
+      });
+      if (hindiVoice) {
+        utterance.voice = hindiVoice;
+        utterance.lang = hindiVoice.lang;
+      } else {
+        utterance.lang = 'hi-IN';
+      }
+
+      utterance.onend = resolve;
+      utterance.onerror = function () {
+        log('TTS playback error — text shown instead.', 'step-error');
+        resolve();
+      };
+
+      // Timeout fallback (in case onend never fires)
+      const timeout = setTimeout(resolve, 15000);
+      utterance.onend = function () {
+        clearTimeout(timeout);
+        resolve();
+      };
+
+      speechSynthesis.speak(utterance);
+    });
+  }
+
+  // Ensure voices are loaded (some browsers load async)
+  if ('speechSynthesis' in window) {
+    speechSynthesis.onvoiceschanged = function () {
+      // voices loaded
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 6. ARCHITECTURE DIAGRAM ANIMATION
+  // ═══════════════════════════════════════════════════════
+
+  function activateNode(name, skipArrow) {
+    const el = document.getElementById('node-' + name);
+    if (el) {
+      el.classList.remove('completed');
+      el.classList.add('active');
+    }
+  }
+
+  function completeNode(name) {
+    const el = document.getElementById('node-' + name);
+    if (el) {
+      el.classList.remove('active');
+      el.classList.add('completed');
+    }
+  }
+
+  function activateArrow(index) {
+    const el = document.getElementById(arrows[index]);
+    if (el) el.classList.add('active');
+  }
+
+  function resetDiagram() {
+    nodes.forEach(function (n) {
+      const el = document.getElementById('node-' + n);
+      if (el) el.classList.remove('active', 'completed', 'error');
+    });
+    arrows.forEach(function (a) {
+      const el = document.getElementById(a);
+      if (el) el.classList.remove('active', 'completed');
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 7. POLICY UI UPDATER
+  // ═══════════════════════════════════════════════════════
+
+  function updatePolicyUI(policy) {
+    if (!policy) {
+      $policyEmpty.style.display = 'flex';
+      $policyCard.classList.remove('visible');
+      $confirmBox.classList.remove('visible');
+      return;
+    }
+
+    $policyEmpty.style.display = 'none';
+    $policyCard.classList.add('visible');
+
+    $policyOp.textContent = policy.operation;
+    $policyChild.textContent = policy.child;
+
+    if (policy.timeWindow) {
+      $policyTime.textContent = policy.timeWindow.start + ' – ' + policy.timeWindow.end;
+      $policyTime.classList.add('highlight');
+    } else {
+      $policyTime.textContent = '—';
+      $policyTime.classList.remove('highlight');
+    }
+
+    renderTags($policyAllow, policy.allowedCategories || [], 'tag-green');
+    renderTags($policyBlock, policy.blockedCategories || [], 'tag-red');
+    renderTags($policyEmrg, policy.emergencyPhrases || [], 'tag-orange');
+  }
+
+  function renderTags(container, items, tagClass) {
+    if (!items.length) {
+      container.innerHTML = '<span style="color:var(--text-faint)">—</span>';
+      return;
+    }
+    container.innerHTML = '<span class="tag-list">' +
+      items.map(function (item) {
+        return '<span class="tag ' + tagClass + '">' + escapeHtml(item) + '</span>';
+      }).join('') + '</span>';
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 8. LOG
+  // ═══════════════════════════════════════════════════════
+
+  function log(msg, cls) {
+    const now = new Date();
+    const ts = now.toLocaleTimeString('en-GB', { hour12: false }) + '.' +
+               String(now.getMilliseconds()).padStart(3, '0');
+
+    // Remove "Waiting..." placeholder
+    const empty = $logBody.querySelector('.log-empty');
+    if (empty) empty.parentElement.remove();
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML =
+      '<span class="log-time">' + ts + '</span>' +
+      '<span class="log-msg ' + (cls || '') + '">' + escapeHtml(msg) + '</span>';
+    $logBody.appendChild(entry);
+    $logBody.scrollTop = $logBody.scrollHeight;
+  }
+
+  function clearLog() {
+    $logBody.innerHTML = '';
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // 9. QUICK-TEST BUTTONS
+  // ═══════════════════════════════════════════════════════
+
+  document.querySelectorAll('.quick-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const utterance = this.getAttribute('data-utterance');
+      $transcript.value = utterance;
+      // Auto-run pipeline
+      if (!pipelineRunning) {
+        runPipeline(utterance);
+      }
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // UTILITIES
+  // ═══════════════════════════════════════════════════════
+
+  function wait(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  function truncate(str, len) {
+    return str.length > len ? str.substring(0, len) + '...' : str;
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+})();
+</script>
+</body>
+</html>

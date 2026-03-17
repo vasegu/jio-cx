@@ -1,0 +1,213 @@
+/*
+ * Jio Brand Theme — CSS Custom Properties for Web Apps
+ *
+ * VERIFIED from jio.com live site (March 2026):
+ *   - --jio-blue (#0F3CC9): Confirmed as --color-blue-100 across jio.com, jio.com/business, jio.com/apps
+ *   - --jio-red (#DA2441): Confirmed from live logo SVG (myjiostatic.cdn.jio.com)
+ *   - Corporate typeface: JioType (Monotype) — real font files included (Bold, Medium, Light)
+ *   - Fallback font: Nunito from Google Fonts
+ *
+ * NOTE: Older brand references cite #005AAC (Pantone PMS 2935 C) — this was the PREVIOUS brand blue.
+ *       The current digital brand uses #0F3CC9 everywhere on jio.com.
+ *
+ * APPROXIMATE VALUES (sampled from public Jio materials, not from official guidelines):
+ *   - Extended "Colours of India" palette colors
+ *   - Background tints
+ */
+
+/* ── JioType — real corporate font (Monotype / Reliance Jio 2016) ── */
+@font-face {
+  font-family: 'JioType';
+  src: url('../assets/fonts/jiotype/JioTypeW04-Light.woff') format('woff'),
+       url('../assets/fonts/jiotype/JioTypeW04-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'JioType';
+  src: url('../assets/fonts/jiotype/JioTypeW04-Medium.woff') format('woff'),
+       url('../assets/fonts/jiotype/JioTypeW04-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'JioType';
+  src: url('../assets/fonts/jiotype/JioTypeW04-Bold.woff') format('woff'),
+       url('../assets/fonts/jiotype/JioTypeW04-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Nunito fallback for environments without local font loading */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+:root {
+  /* ── Primary Colors (verified from jio.com March 2026) ── */
+  --jio-blue: #0F3CC9;            /* Current brand blue — --color-blue-100 on jio.com */
+  --jio-red: #DA2441;             /* Current brand red — from live logo SVG */
+  --jio-white: #FFFFFF;
+
+  /* ── Legacy colors (still valid for reference, Pantone specs) ── */
+  --jio-blue-legacy: #005AAC;     /* Original Pantone PMS 2935 C — pre-rebrand */
+  --jio-red-legacy: #FF0000;      /* Original digital red */
+
+  /* ── Extended "Colours of India" (APPROXIMATE — not from official docs) ── */
+  --jio-saffron: #FF6F00;
+  --jio-magenta: #D9008D;
+  --jio-green: #00C853;
+  --jio-teal: #00BCD4;
+  --jio-purple: #7B1FA2;
+  --jio-gold: #FFD600;
+  --jio-sky: #29B6F6;
+  --jio-coral: #FF7043;
+
+  /* ── JDS Design System tokens (from jio.com CSS variables) ── */
+  --jio-black: #141414;           /* --color-black-100 */
+  --jio-grey-90: rgba(0,0,0,0.65); /* --color-grey-90 */
+  --jio-focus-blue: #005fcc;      /* Focus/outline state */
+  --jio-light-bg: #E7EBF8;        /* Submenu / light section background */
+
+  /* ── Background tints ── */
+  --jio-deep-blue: #0a2885;       /* Dark accent, from Wikipedia logo / jio.com */
+  --jio-light-tint: #E7EBF8;      /* Current light blue tint on jio.com */
+  --jio-off-white: #FAFAFA;
+  --jio-charcoal: #141414;        /* Updated to match --color-black-100 */
+
+  /* ── Text colors ── */
+  --jio-text-heading: #0F3CC9;
+  --jio-text-body: #141414;
+  --jio-text-caption: rgba(0,0,0,0.65);
+  --jio-border: #E0E0E0;
+
+  /* ── Typography ── */
+  --jio-font: 'JioType', 'Nunito', sans-serif;
+  --jio-tracking: 0.02em;
+  --jio-line-height: 1.5;
+  --jio-radius: 8px;
+
+  /* ── Chart series (for Recharts, Chart.js, D3, etc.) ── */
+  --jio-chart-1: #0F3CC9;
+  --jio-chart-2: #FF6F00;
+  --jio-chart-3: #D9008D;
+  --jio-chart-4: #00C853;
+  --jio-chart-5: #00BCD4;
+  --jio-chart-6: #7B1FA2;
+  --jio-chart-7: #FFD600;
+  --jio-chart-8: #FF7043;
+}
+
+/* ── Base reset ── */
+.jio-app {
+  font-family: var(--jio-font);
+  color: var(--jio-text-body);
+  background: var(--jio-off-white);
+  letter-spacing: var(--jio-tracking);
+  line-height: var(--jio-line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Headings ── */
+.jio-app h1, .jio-app h2, .jio-app h3 {
+  color: var(--jio-text-heading);
+  font-weight: 700;
+}
+.jio-app h1 { font-size: 2.25rem; letter-spacing: -0.01em; }
+.jio-app h2 { font-size: 1.5rem; font-weight: 600; }
+.jio-app h3 { font-size: 1.125rem; font-weight: 600; }
+
+/* ── Buttons ── */
+.jio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--jio-blue);
+  color: var(--jio-white);
+  border: none;
+  border-radius: var(--jio-radius);
+  padding: 10px 24px;
+  font-family: var(--jio-font);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.jio-btn:hover { background: var(--jio-deep-blue); }
+.jio-btn:active { transform: scale(0.98); }
+.jio-btn--red { background: var(--jio-red); }
+.jio-btn--outline {
+  background: transparent;
+  border: 2px solid var(--jio-blue);
+  color: var(--jio-blue);
+}
+.jio-btn--outline:hover { background: var(--jio-light-tint); }
+
+/* ── Cards ── */
+.jio-card {
+  background: var(--jio-white);
+  border-radius: var(--jio-radius);
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s;
+}
+.jio-card:hover { box-shadow: 0 4px 16px rgba(15,60,201,0.12); }
+.jio-card--accent {
+  background: var(--jio-blue);
+  color: var(--jio-white);
+}
+
+/* ── Header ── */
+.jio-header {
+  background: var(--jio-blue);
+  color: var(--jio-white);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.jio-header img { height: 32px; }
+
+/* ── Table ── */
+.jio-table { width: 100%; border-collapse: collapse; }
+.jio-table th {
+  background: var(--jio-blue);
+  color: var(--jio-white);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.jio-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--jio-border);
+  font-size: 0.9rem;
+}
+.jio-table tr:nth-child(even) { background: var(--jio-light-tint); }
+
+/* ── Callout / Alert ── */
+.jio-callout {
+  background: var(--jio-light-tint);
+  border-left: 4px solid var(--jio-blue);
+  padding: 14px 18px;
+  border-radius: 0 var(--jio-radius) var(--jio-radius) 0;
+  font-size: 0.95rem;
+}
+
+/* ── Badge / Tag ── */
+.jio-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* ── Footer attribution (Accenture — keep subtle) ── */
+.jio-footer-attribution {
+  padding: 16px 24px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
