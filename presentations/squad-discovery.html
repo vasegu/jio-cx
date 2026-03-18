@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discovery Squad — Jio Super-App</title>
+
+  <style>
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --jio-blue: #0F3CC9;
+      --jio-deep-blue: #0a2885;
+      --jio-red: #DA2441;
+      --jio-green: #00C853;
+      --jio-gold: #EFA73D;
+      --jio-purple: #7B1FA2;
+      --jio-black: #141414;
+      --jio-grey: rgba(0,0,0,0.65);
+      --jio-grey-muted: rgba(0,0,0,0.35);
+      --jio-border: #E0E0E0;
+      --jio-light-tint: #E7EBF8;
+      --jio-off-white: #FAFAFA;
+      --jio-white: #FFFFFF;
+      --jio-font: 'JioType', 'Nunito', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--jio-font);
+      color: var(--jio-black);
+      background: var(--jio-white);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Slide container — 16:9 */
+    .slide {
+      width: 1440px;
+      height: 810px;
+      margin: 0 auto;
+      padding: 40px 56px 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .slide-eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--jio-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .slide-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--jio-black);
+      margin-bottom: 16px;
+    }
+
+    /* Legend */
+    .legend {
+      position: absolute;
+      top: 40px;
+      right: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--jio-grey);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Dot colors */
+    .dot-client { background: var(--jio-gold); }
+    .dot-acn { background: var(--jio-purple); }
+    .dot-either { background: linear-gradient(135deg, var(--jio-gold) 0%, var(--jio-purple) 100%); }
+
+    /* Orbit area */
+    .orbit {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    /* SVG connectors */
+    .orbit svg.connectors {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Central hub */
+    .hub {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--jio-blue);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 4px 24px rgba(15, 60, 201, 0.25);
+    }
+    .hub-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--jio-white);
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+    .hub-subtitle {
+      font-size: 13px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.04em;
+    }
+    .hub-count {
+      font-size: 9px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      margin-top: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Role cards */
+    .role-card {
+      position: absolute;
+      width: 158px;
+      transform: translate(-50%, -50%);
+      border-radius: 8px;
+      padding: 10px 11px;
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      z-index: 3;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid var(--jio-border);
+    }
+    .role-card.persistent {
+      background: var(--jio-light-tint);
+      border-color: rgba(15, 60, 201, 0.12);
+    }
+    .role-card.phase-specific {
+      background: var(--jio-white);
+      border-left: 3px solid var(--jio-blue);
+    }
+
+    .card-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .card-name {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--jio-black);
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+    .card-desc {
+      font-size: 7.5px;
+      color: var(--jio-grey);
+      line-height: 1.35;
+    }
+    .card-count {
+      font-size: 7.5px;
+      font-weight: 600;
+      color: var(--jio-blue);
+      background: rgba(15,60,201,0.08);
+      padding: 1px 4px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-left: 2px;
+    }
+
+    /* Phase note */
+    .phase-note {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--jio-grey);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    /* Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      margin-top: auto;
+    }
+    .footer-left {
+      font-size: 10px;
+      color: var(--jio-grey-muted);
+      letter-spacing: 0.04em;
+    }
+    .footer-left span { font-weight: 700; }
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 10px;
+      color: var(--jio-grey-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="slide">
+
+  <!-- Header -->
+  <div class="slide-eyebrow">Talent & team model</div>
+  <div class="slide-title">Discovery Squad</div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-client"></div>Typically client filled</div>
+    <div class="legend-item"><div class="legend-dot dot-acn"></div>Typically Accenture filled</div>
+    <div class="legend-item"><div class="legend-dot dot-either"></div>Filled by either</div>
+    <div class="legend-item" style="margin-top: 6px;"><div class="legend-swatch" style="background: var(--jio-light-tint); border: 1px solid rgba(15,60,201,0.12);"></div>Persistent role</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--jio-white); border: 1px solid var(--jio-border); border-left: 3px solid var(--jio-blue);"></div>Discovery phase role</div>
+  </div>
+
+  <!-- Orbit area -->
+  <div class="orbit">
+
+    <!-- SVG connector lines -->
+    <svg class="connectors" viewBox="0 0 1328 620" preserveAspectRatio="xMidYMid meet">
+      <line x1="664" y1="310" x2="664" y2="48"  stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="944" y2="128" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="1064" y2="290" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="974" y2="458" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="784" y2="558" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="354" y2="458" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="264" y2="290" stroke="#D8D8D8" stroke-width="1"/>
+      <line x1="664" y1="310" x2="384" y2="128" stroke="#D8D8D8" stroke-width="1"/>
+    </svg>
+
+    <!-- Central hub -->
+    <div class="hub">
+      <div class="hub-title">Discovery</div>
+      <div class="hub-subtitle">Squad</div>
+      <div class="hub-count">8 roles</div>
+    </div>
+
+    <!-- 0: Product Owner — top center -->
+    <div class="role-card persistent" style="left: calc(50%); top: calc(50% - 262px);">
+      <div class="card-dot dot-client"></div>
+      <div>
+        <div class="card-name">Product Owner</div>
+        <div class="card-desc">Feature prioritisation by business value; defines evaluation acceptance criteria</div>
+      </div>
+    </div>
+
+    <!-- 1: Squad Lead — upper right -->
+    <div class="role-card persistent" style="left: calc(50% + 280px); top: calc(50% - 182px);">
+      <div class="card-dot dot-either"></div>
+      <div>
+        <div class="card-name">Squad Lead</div>
+        <div class="card-desc">Sprint planning, capacity allocation and cross-role dependency management</div>
+      </div>
+    </div>
+
+    <!-- 2: AI Solution Architect — right -->
+    <div class="role-card persistent" style="left: calc(50% + 400px); top: calc(50% - 20px);">
+      <div class="card-dot dot-acn"></div>
+      <div>
+        <div class="card-name">AI Solution Architect</div>
+        <div class="card-desc">Cross-squad architecture; alignment on tool graph, memory and guardrails</div>
+      </div>
+    </div>
+
+    <!-- 3: FD AI Engineers — lower right -->
+    <div class="role-card persistent" style="left: calc(50% + 310px); top: calc(50% + 148px);">
+      <div class="card-dot dot-acn"></div>
+      <div>
+        <div class="card-name">FD AI Engineers <span class="card-count">2x</span></div>
+        <div class="card-desc">Agent behaviors, tool integrations, evaluation pipelines and orchestration</div>
+      </div>
+    </div>
+
+    <!-- 4: Technical BA — bottom right -->
+    <div class="role-card persistent" style="left: calc(50% + 120px); top: calc(50% + 248px);">
+      <div class="card-dot dot-acn"></div>
+      <div>
+        <div class="card-name">Agent Behaviour Analyst</div>
+        <div class="card-desc">Business processes to agent behavior specs and eval criteria; anticipates agent capabilities replacing static SOPs</div>
+      </div>
+    </div>
+
+    <!-- 5: UX Designer — bottom left -->
+    <div class="role-card phase-specific" style="left: calc(50% - 310px); top: calc(50% + 148px);">
+      <div class="card-dot dot-acn"></div>
+      <div>
+        <div class="card-name">UX Designer</div>
+        <div class="card-desc">High-fidelity prototypes validating interaction patterns with agent interfaces</div>
+      </div>
+    </div>
+
+    <!-- 7: Voice / Conversational Designer — left -->
+    <div class="role-card phase-specific" style="left: calc(50% - 400px); top: calc(50% - 20px);">
+      <div class="card-dot dot-acn"></div>
+      <div>
+        <div class="card-name">Human-AI Experience (HAX) Designer</div>
+        <div class="card-desc">Agent persona, trust patterns, escalation moments and multi-modal interaction</div>
+      </div>
+    </div>
+
+    <!-- 8: Business SME — upper left -->
+    <div class="role-card persistent" style="left: calc(50% - 280px); top: calc(50% - 182px);">
+      <div class="card-dot dot-either"></div>
+      <div>
+        <div class="card-name">Business SME</div>
+        <div class="card-desc">Domain ground-truth; validates agent outputs against real-world accuracy</div>
+      </div>
+    </div>
+
+    <!-- Phase note -->
+    <div class="phase-note">FD AI Engineers at 2x during Discovery (bootstrapping agents and evaluation frameworks)</div>
+
+  </div><!-- /orbit -->
+
+  <!-- Footer -->
+  <div class="slide-footer">
+    <div class="footer-left"><span>Reliance</span> x <span>Accenture</span> Strategic Partnership</div>
+    <div class="footer-right">
+      <span>Copyright Accenture 2026. All rights reserved.</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

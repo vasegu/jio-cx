@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indicative Squad Profiles — Jio Super-App</title>
+
+  <style>
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'JioType';
+      src: url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.woff') format('woff'),
+           url('../../brand-assets/fonts/jiotype/JioTypeW04-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --jio-blue: #0F3CC9;
+      --jio-deep-blue: #0a2885;
+      --jio-red: #DA2441;
+      --jio-green: #00C853;
+      --jio-gold: #EFA73D;
+      --jio-purple: #7B1FA2;
+      --jio-black: #141414;
+      --jio-grey: rgba(0,0,0,0.65);
+      --jio-grey-muted: rgba(0,0,0,0.35);
+      --jio-border: #E0E0E0;
+      --jio-light-tint: #E7EBF8;
+      --jio-off-white: #FAFAFA;
+      --jio-white: #FFFFFF;
+      --jio-font: 'JioType', 'Nunito', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--jio-font);
+      color: var(--jio-black);
+      background: var(--jio-white);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Slide container — 16:9 aspect ratio */
+    .slide {
+      width: 1440px;
+      height: 810px;
+      margin: 0 auto;
+      padding: 40px 56px 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Header area */
+    .slide-eyebrow {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--jio-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .slide-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--jio-black);
+      margin-bottom: 24px;
+    }
+
+    /* Legend */
+    .legend {
+      position: absolute;
+      top: 40px;
+      right: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--jio-grey);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Portfolio bar */
+    .portfolio-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 1px;
+      background: var(--jio-border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .portfolio-role {
+      flex: 1;
+      background: var(--jio-white);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .portfolio-role:first-child {
+      background: var(--jio-blue);
+      color: var(--jio-white);
+      border-radius: 8px 0 0 8px;
+      flex: 0 0 auto;
+      padding: 10px 20px;
+    }
+    .portfolio-role:first-child .pr-title {
+      color: var(--jio-white);
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .portfolio-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pr-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--jio-black);
+      line-height: 1.3;
+    }
+    .pr-desc {
+      font-size: 9px;
+      color: var(--jio-grey);
+      line-height: 1.3;
+    }
+
+    /* Main content grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Persistent squad */
+    .persistent {
+      background: var(--jio-light-tint);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .persistent-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--jio-blue);
+      margin-bottom: 2px;
+    }
+    .persistent-sub {
+      font-size: 8px;
+      color: var(--jio-grey);
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+    .persistent-roles {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    /* Phase columns */
+    .phases {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .phase-col {
+      background: var(--jio-white);
+      border: 1px solid var(--jio-border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .phase-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--jio-border);
+    }
+    .phase-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--jio-black);
+      margin-bottom: 2px;
+    }
+    .phase-sub {
+      font-size: 8px;
+      color: var(--jio-grey);
+      font-style: italic;
+    }
+    .phase-roles {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .phase-note {
+      padding: 6px 12px;
+      border-top: 1px solid var(--jio-border);
+      font-size: 8px;
+      color: var(--jio-grey);
+      font-style: italic;
+      background: var(--jio-off-white);
+    }
+    .phase-col.steady-state-col {
+      border-style: dashed;
+      background: var(--jio-off-white);
+    }
+    .phase-col.steady-state-col .phase-header {
+      border-bottom-style: dashed;
+    }
+    .steady-state-mirror {
+      font-size: 9px;
+      color: var(--jio-grey);
+      line-height: 1.45;
+      padding: 10px 12px;
+      flex: 1;
+    }
+    .steady-state-mirror strong {
+      color: var(--jio-black);
+      font-weight: 700;
+    }
+
+    /* Role rows */
+    .role {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .role-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .role-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--jio-black);
+      line-height: 1.3;
+    }
+    .role-desc {
+      font-size: 8px;
+      color: var(--jio-grey);
+      line-height: 1.35;
+    }
+    .role-count {
+      font-size: 8px;
+      font-weight: 600;
+      color: var(--jio-blue);
+      background: rgba(15,60,201,0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-left: 3px;
+    }
+
+    /* Dot colors */
+    .dot-client { background: var(--jio-gold); }
+    .dot-acn { background: var(--jio-purple); }
+    .dot-either { background: linear-gradient(135deg, var(--jio-gold) 0%, var(--jio-purple) 100%); }
+
+    /* Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      margin-top: auto;
+    }
+    .footer-left {
+      font-size: 10px;
+      color: var(--jio-grey-muted);
+      letter-spacing: 0.04em;
+    }
+    .footer-left span { font-weight: 700; }
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 10px;
+      color: var(--jio-grey-muted);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="slide">
+
+  <!-- Header -->
+  <div class="slide-eyebrow">Talent & team model</div>
+  <div class="slide-title">Indicative Squad Profiles</div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-client"></div>Typically client filled</div>
+    <div class="legend-item"><div class="legend-dot dot-acn"></div>Typically Accenture filled</div>
+    <div class="legend-item"><div class="legend-dot dot-either"></div>Filled by either</div>
+  </div>
+
+  <!-- Portfolio bar -->
+  <div class="portfolio-bar">
+    <div class="portfolio-role">
+      <div class="pr-title">Portfolio</div>
+    </div>
+    <div class="portfolio-role">
+      <div class="portfolio-dot dot-either"></div>
+      <div>
+        <div class="pr-title">Delivery Leadership</div>
+        <div class="pr-desc">Velocity and burn across squads; manages dependencies and escalation</div>
+      </div>
+    </div>
+    <div class="portfolio-role">
+      <div class="portfolio-dot dot-client"></div>
+      <div>
+        <div class="pr-title">VRO & Adoption</div>
+        <div class="pr-desc">Tracks agent adoption, cost-per-task, value realization vs business case</div>
+      </div>
+    </div>
+    <div class="portfolio-role">
+      <div class="portfolio-dot dot-client"></div>
+      <div>
+        <div class="pr-title">Enterprise & Strategic Architecture</div>
+        <div class="pr-desc">Aligns agent platform with enterprise AI strategy and integration landscape</div>
+      </div>
+    </div>
+    <div class="portfolio-role">
+      <div class="portfolio-dot dot-client"></div>
+      <div>
+        <div class="pr-title">Security & Privacy</div>
+        <div class="pr-desc">Responsible AI governance, data classification, model risk approvals</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="content-grid">
+
+    <!-- Persistent squad -->
+    <div class="persistent">
+      <div class="persistent-header">Persistent Squad</div>
+      <div class="persistent-sub">Present across all phases</div>
+      <div class="persistent-roles">
+        <div class="role">
+          <div class="role-dot dot-either"></div>
+          <div>
+            <div class="role-name">Squad Lead</div>
+            <div class="role-desc">Manages sprint planning, capacity allocation and cross-role dependencies; escalation point within the squad</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-dot dot-acn"></div>
+          <div>
+            <div class="role-name">AI Solution Architect</div>
+            <div class="role-desc">Sits cross-squad; defines agent architecture, ensures alignment on tool graph, memory and guardrails</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-dot dot-client"></div>
+          <div>
+            <div class="role-name">Product Owner</div>
+            <div class="role-desc">Prioritises features by business value and technical feasibility; defines evaluation acceptance criteria</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-dot dot-acn"></div>
+          <div>
+            <div class="role-name">Forward Deployed AI Engineers <span class="role-count">2-3x</span></div>
+            <div class="role-desc">Design and implement agent behaviors, tool integrations, evaluation pipelines and orchestration layers</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-dot dot-acn"></div>
+          <div>
+            <div class="role-name">Agent Behaviour Analyst</div>
+            <div class="role-desc">Translates business processes into agent behavior specifications and eval criteria; anticipates how agent capabilities replace static SOPs</div>
+          </div>
+        </div>
+        <div class="role">
+          <div class="role-dot dot-either"></div>
+          <div>
+            <div class="role-name">Business SME</div>
+            <div class="role-desc">Supplies domain ground-truth and validates agent outputs against real-world accuracy and compliance standards</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase columns -->
+    <div class="phases">
+
+      <!-- Discovery -->
+      <div class="phase-col">
+        <div class="phase-header">
+          <div class="phase-title">Discovery</div>
+          <div class="phase-sub">Validate agent feasibility, define target journeys and establish evaluation criteria</div>
+        </div>
+        <div class="phase-roles">
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">UX Designer</div>
+              <div class="role-desc">Produces high-fidelity prototypes to validate user interaction patterns with agent-driven interfaces</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Human-AI Experience (HAX) Designer</div>
+              <div class="role-desc">Designs agent persona, trust patterns, escalation moments and multi-modal interaction across voice, chat and gesture</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-note">FD AI Engineers at 2x during Discovery (bootstrapping agents and evals)</div>
+      </div>
+
+      <!-- Build & Iterate -->
+      <div class="phase-col">
+        <div class="phase-header">
+          <div class="phase-title">Build & Iterate</div>
+          <div class="phase-sub">Incremental agent delivery with continuous evaluation and prompt refinement</div>
+        </div>
+        <div class="phase-roles">
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Platform / Infra Engineer</div>
+              <div class="role-desc">Edge/core inference split, token metering, DFC integration</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Data Engineer</div>
+              <div class="role-desc">LifeGraph pipelines, cluster embeddings, signal infrastructure</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Front-end Developers <span class="role-count">2x</span></div>
+              <div class="role-desc">Builds native applications, agent-facing interfaces, streaming chat components and operational dashboards</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">QA & Eval Engineer</div>
+              <div class="role-desc">Builds evaluation harnesses for non-deterministic agent behavior and regression suites for deterministic components</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-note">FD AI Engineers at peak 3x; observability, eval coverage and agent performance</div>
+      </div>
+
+      <!-- Harden & Launch -->
+      <div class="phase-col">
+        <div class="phase-header">
+          <div class="phase-title">Harden & Launch</div>
+          <div class="phase-sub">Adversarial testing, guardrail validation and production certification</div>
+        </div>
+        <div class="phase-roles">
+          <div class="role">
+            <div class="role-dot dot-client"></div>
+            <div>
+              <div class="role-name">Security Architect</div>
+              <div class="role-desc">Conducts security assessment including LLM-specific risks: prompt injection, data leakage, model exfiltration</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">DevOps / AIOps Engineer</div>
+              <div class="role-desc">Implements CI/CD for agent deployments and eval suites; manages canary releases, rollback and production observability</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Site Reliability Engineer</div>
+              <div class="role-desc">Defines and enforces SLOs for inference latency, agent accuracy and availability; incident response for model degradation</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-acn"></div>
+            <div>
+              <div class="role-name">Technical & AI QA</div>
+              <div class="role-desc">Systematically tests agent edge-cases through adversarial scenarios; validates guardrail effectiveness at scale</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-client"></div>
+            <div>
+              <div class="role-name">Security Representative</div>
+              <div class="role-desc">Responsible AI and security signoff before each release tier</div>
+            </div>
+          </div>
+          <div class="role">
+            <div class="role-dot dot-client"></div>
+            <div>
+              <div class="role-name">Jio Integration Lead</div>
+              <div class="role-desc">Manages API integration with JioMart, JioFinance, JioCinema and UPI gateway; validates end-to-end data flows</div>
+            </div>
+          </div>
+        </div>
+        <div class="phase-note">FD AI Engineers at 2x; hardening agent behavior and production readiness</div>
+      </div>
+
+      <!-- Steady-State -->
+      <div class="phase-col steady-state-col">
+        <div class="phase-header">
+          <div class="phase-title">Steady-State</div>
+          <div class="phase-sub">Smaller feature cycles; model governance, agent refinement and new signals</div>
+        </div>
+        <div class="steady-state-mirror">
+          <p style="margin-bottom: 10px;">AI-native products do not transition to traditional BAU. Agents learn, models drift, new signals emerge. The squad stays on at <strong>25-40% capacity</strong> running shorter feature cycles.</p>
+          <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--jio-border); padding-top: 8px;">
+            <div class="role">
+              <div class="role-dot dot-either"></div>
+              <div>
+                <div class="role-name">Squad Lead</div>
+                <div class="role-desc">Manages sprint cadence across smaller feature cycles</div>
+              </div>
+            </div>
+            <div class="role">
+              <div class="role-dot dot-acn"></div>
+              <div>
+                <div class="role-name">AI Solution Architect</div>
+                <div class="role-desc">Cross-squad alignment; architecture governance as new signals land</div>
+              </div>
+            </div>
+            <div class="role">
+              <div class="role-dot dot-client"></div>
+              <div>
+                <div class="role-name">Product Owner</div>
+                <div class="role-desc">Prioritises new features and signals; evaluates agent performance</div>
+              </div>
+            </div>
+            <div class="role">
+              <div class="role-dot dot-acn"></div>
+              <div>
+                <div class="role-name">FD AI Engineers <span class="role-count">1-2x</span></div>
+                <div class="role-desc">Prompt refinement, eval drift detection, model version transitions</div>
+              </div>
+            </div>
+            <div class="role">
+              <div class="role-dot dot-acn"></div>
+              <div>
+                <div class="role-name">Platform / Infra Engineer</div>
+                <div class="role-desc">Autoscaling, token cost governance, inference latency monitoring</div>
+              </div>
+            </div>
+            <div class="role">
+              <div class="role-dot dot-acn"></div>
+              <div>
+                <div class="role-name">Data Engineer</div>
+                <div class="role-desc">New signal onboarding, embedding freshness, feedback loop pipelines</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /phases -->
+
+  </div><!-- /content-grid -->
+
+  <!-- Footer -->
+  <div class="slide-footer">
+    <div class="footer-left"><span>Reliance</span> x <span>Accenture</span> Strategic Partnership</div>
+    <div class="footer-right">
+      <span>Copyright Accenture 2026. All rights reserved.</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,279 +1,752 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 
 /*
- * Offer Embedding Map
- * Dots = people. Circles = offers. Gaps = opportunity.
- * Vasco's accumulated actions drift him through offer-space.
+ * User Behavioral Embedding Space
+ *
+ * UMAP projection of per-user behavioral vectors built from platform signals:
+ *   Network: GB/day, peak hours, 5G/WiFi ratio, location regularity
+ *   Devices: count, types, slices, Guardian Mesh rules
+ *   Streaming: hrs/day, genres, live events, Saavn vs Cinema
+ *   Commerce: orders/mo, basket size, voice vs browse, store pref
+ *   Finance: UPI txn count + avg value, bills, savings, fraud score
+ *   Session: daily opens, avg duration, services/session
+ *   AI: tokens consumed, Buddy interactions, voice queries/wk
+ *   Lifecycle: tenure, plan tier, upgrade history, support contacts
+ *
+ * X-axis ≈ service breadth (connectivity only → deep platform adoption)
+ * Y-axis ≈ session frequency (infrequent → daily multi-session)
+ *
+ * Mumbai sample: ~31k users, 9 natural clusters (1 undefined — emergent patterns not yet served).
  */
 
-function mulberry32(a) {
-  return function() {
-    a |= 0; a = a + 0x6D2B79F5 | 0
-    let t = Math.imul(a ^ a >>> 15, 1 | a)
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t
-    return ((t ^ t >>> 14) >>> 0) / 4294967296
+/* ── Deterministic scatter ── */
+function mulberry32(seed) {
+  return function () {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
-
-function gaussian(cx, cy, count, spread, seed) {
-  const rng = mulberry32(seed)
-  const pts = []
-  for (let i = 0; i < count; i++) {
-    const u1 = rng(), u2 = rng()
-    const r = Math.sqrt(-2 * Math.log(Math.max(u1, 0.001))) * spread
-    const th = 2 * Math.PI * u2
-    pts.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th) })
-  }
-  return pts
+function gaussPair(rng) {
+  const u1 = rng(), u2 = rng()
+  const m = Math.sqrt(-2 * Math.log(u1 + 0.0001))
+  return [m * Math.cos(2 * Math.PI * u2), m * Math.sin(2 * Math.PI * u2)]
 }
 
-/* ── Offers (the circles) ── */
-const OFFERS_BY_SCENARIO = {
-  home: [
-    { id: 'ai-lite',   name: 'AI Lite Plan',       detail: '100 tok/day', x: 72,  y: 58,  color: '#0F3CC9', r: 16, people: 40, spread: 20, seed: 111 },
-    { id: 'ai-plus',   name: 'AI Plus Plan',       detail: 'Popular',     x: 200, y: 70,  color: '#0F3CC9', r: 20, people: 55, spread: 22, seed: 112 },
-    { id: 'ai-family', name: 'AI Family Plan',     detail: '1500 tok/day',x: 310, y: 80,  color: '#7B1FA2', r: 16, people: 28, spread: 16, seed: 113 },
-    { id: 'booster',   name: 'Token Booster 200',  detail: 'Top-up',      x: 130, y: 150, color: '#00C853', r: 14, people: 22, spread: 14, seed: 221 },
-    { id: 'dev-pack',  name: 'Developer Token Pack',detail: 'API access', x: 350, y: 160, color: '#00C853', r: 12, people: 18, spread: 14, seed: 222 },
-    { id: 'enterprise',name: 'Enterprise API',     detail: 'B2B bundle',  x: 280, y: 220, color: '#EFA73D', r: 14, people: 20, spread: 14, seed: 331 },
-  ],
-  commerce: [
-    { id: 'catalogue', name: 'Digital Catalogue',  detail: 'Photo-based', x: 80,  y: 65,  color: '#0F3CC9', r: 18, people: 35, spread: 18, seed: 111 },
-    { id: 'sourcing',  name: 'Smart Sourcing',     detail: 'Wholesale',   x: 200, y: 55,  color: '#0F3CC9', r: 20, people: 48, spread: 20, seed: 112 },
-    { id: 'upi-settle',name: 'UPI Settlement',     detail: 'Instant',     x: 155, y: 130, color: '#00C853', r: 16, people: 30, spread: 16, seed: 221 },
-    { id: 'voice-ord', name: 'Voice Ordering',     detail: 'Agentic',     x: 320, y: 70,  color: '#7B1FA2', r: 18, people: 38, spread: 18, seed: 222 },
-    { id: 'delivery',  name: 'Delivery Network',   detail: 'Rider alloc', x: 290, y: 180, color: '#EFA73D', r: 14, people: 22, spread: 14, seed: 331 },
-    { id: 'festive',   name: 'Festive Demand AI',  detail: 'Stock pred.', x: 70,  y: 220, color: '#D9008D', r: 14, people: 20, spread: 14, seed: 441 },
-  ],
-  support: [
-    { id: 'speed',     name: 'Speed Test Fix',     detail: 'Auto-diag',   x: 80,  y: 60,  color: '#0F3CC9', r: 18, people: 38, spread: 18, seed: 111 },
-    { id: 'upgrade',   name: 'Plan Upgrade Assist', detail: 'AI guided',  x: 200, y: 55,  color: '#0F3CC9', r: 20, people: 50, spread: 20, seed: 112 },
-    { id: 'billing',   name: 'Bill Dispute',       detail: 'Resolution',  x: 310, y: 75,  color: '#EFA73D', r: 14, people: 22, spread: 14, seed: 221 },
-    { id: 'netdiag',   name: 'Network Diagnostics',detail: 'Deep scan',   x: 140, y: 140, color: '#00C853', r: 16, people: 30, spread: 16, seed: 222 },
-    { id: 'device',    name: 'Device Setup Guide', detail: 'Step-by-step',x: 70,  y: 210, color: '#7B1FA2', r: 13, people: 18, spread: 14, seed: 331 },
-    { id: 'roaming',   name: 'Roaming Support',    detail: 'Intl help',   x: 290, y: 200, color: '#D9008D', r: 14, people: 20, spread: 14, seed: 441 },
-  ],
-  finance: [
-    { id: 'upi-cash',  name: 'UPI Cashback 5%',    detail: 'Payments',   x: 80,  y: 60,  color: '#0F3CC9', r: 16, people: 32, spread: 17, seed: 111 },
-    { id: 'insure',    name: 'JioInsure Health',   detail: '₹499/yr',    x: 140, y: 140, color: '#0F3CC9', r: 14, people: 20, spread: 14, seed: 112 },
-    { id: 'mf-sip',    name: 'Mutual Fund SIP',    detail: 'Auto-invest',x: 300, y: 65,  color: '#00C853', r: 16, people: 28, spread: 16, seed: 221 },
-    { id: 'credit',    name: 'Credit Line ₹50K',   detail: 'Pre-approved',x: 210, y: 100, color: '#7B1FA2', r: 18, people: 40, spread: 18, seed: 222 },
-    { id: 'gold',      name: 'Gold Investment',    detail: 'Digital gold',x: 340, y: 150, color: '#EFA73D', r: 12, people: 16, spread: 12, seed: 331 },
-    { id: 'ins-bundle',name: 'Insurance Bundle',   detail: 'Life + Health',x: 80, y: 240, color: '#D9008D', r: 14, people: 22, spread: 14, seed: 441 },
-  ],
+const W = 440
+const H = 220
+const MONTHS = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']
+
+/*
+ * 9 clusters — positioned organically in embedding space.
+ * Labels describe the behavioral signature, not a marketing category.
+ * "Undefined" = vectors that don't converge to any known cluster.
+ * The platform surfaces these automatically — free product intelligence.
+ */
+const CLUSTERS = [
+  {
+    id: 'fullspectrum',
+    label: 'Full-Spectrum',
+    sig: 'High L2 norm across all dims, flat temporal dist., AI+voice+family active',
+    color: '#0F3CC9',
+    // Highest ARPU — vectors far from origin in every dimension. Arjun is here.
+    stats: [
+      { users: 2400, arpu: 842, delta: '+6%' },
+      { users: 2380, arpu: 856, delta: '+5%' },
+      { users: 2340, arpu: 868, delta: '+4%' },
+      { users: 2300, arpu: 874, delta: '+3%' },
+      { users: 2260, arpu: 880, delta: '+2%' },
+      { users: 2220, arpu: 884, delta: '+1%' },
+    ],
+  },
+  {
+    id: 'contentgravity',
+    label: 'Content Gravity',
+    sig: 'Embedding concentrated in streaming+audio dims, peak 19:00-23:00, commerce near-zero',
+    color: '#D9008D',
+    stats: [
+      { users: 4800, arpu: 412, delta: '+3%' },
+      { users: 4840, arpu: 408, delta: '+2%' },
+      { users: 4860, arpu: 402, delta: '+1%' },
+      { users: 4880, arpu: 396, delta: '0%' },
+      { users: 4900, arpu: 388, delta: '-1%' },
+      { users: 4920, arpu: 380, delta: '-2%' },
+    ],
+  },
+  {
+    id: 'commercecircuit',
+    label: 'Commerce Circuits',
+    sig: 'UPI x merchant graph tight coupling, habitual order loops, finance signals strong',
+    color: '#00C853',
+    stats: [
+      { users: 3600, arpu: 524, delta: '+4%' },
+      { users: 3580, arpu: 518, delta: '+3%' },
+      { users: 3540, arpu: 510, delta: '+1%' },
+      { users: 3480, arpu: 498, delta: '-1%' },
+      { users: 3400, arpu: 484, delta: '-3%' },
+      { users: 3320, arpu: 468, delta: '-5%' },
+    ],
+  },
+  {
+    id: 'routineloop',
+    label: 'Routine Loops',
+    sig: 'Repeating daily session x content x merchant pattern, low WoW vector variance',
+    color: '#7B1FA2',
+    stats: [
+      { users: 1800, arpu: 698, delta: '+5%' },
+      { users: 1820, arpu: 704, delta: '+5%' },
+      { users: 1840, arpu: 710, delta: '+4%' },
+      { users: 1860, arpu: 714, delta: '+3%' },
+      { users: 1880, arpu: 718, delta: '+3%' },
+      { users: 1900, arpu: 722, delta: '+2%' },
+    ],
+  },
+  {
+    id: 'signalsparse',
+    label: 'Signal Sparse',
+    sig: 'Near-origin vectors, only network+recharge dims register, <2 services adopted',
+    color: '#9E9E9E',
+    // Largest cluster — the platform adoption opportunity
+    stats: [
+      { users: 14200, arpu: 186, delta: '0%' },
+      { users: 14180, arpu: 184, delta: '0%' },
+      { users: 14160, arpu: 182, delta: '-1%' },
+      { users: 14140, arpu: 180, delta: '-1%' },
+      { users: 14120, arpu: 178, delta: '-1%' },
+      { users: 14100, arpu: 176, delta: '-2%' },
+    ],
+  },
+  {
+    id: 'burstepisodic',
+    label: 'Burst Episodic',
+    sig: 'High temporal variance, 3-4 day intensity bursts then silence, mixed signal dims',
+    color: '#29B6F6',
+    stats: [
+      { users: 3200, arpu: 298, delta: '+1%' },
+      { users: 3220, arpu: 294, delta: '0%' },
+      { users: 3240, arpu: 290, delta: '-1%' },
+      { users: 3260, arpu: 284, delta: '-2%' },
+      { users: 3280, arpu: 278, delta: '-3%' },
+      { users: 3300, arpu: 272, delta: '-4%' },
+    ],
+  },
+  {
+    id: 'drifttrajectory',
+    label: 'Drift Trajectory',
+    sig: 'Vector velocity toward origin, cross-dim magnitude declining 4-8% MoM',
+    color: '#EFA73D',
+    attention: true,
+    // KEY INSIGHT: this cluster is GROWING — users migrating in from other clusters
+    stats: [
+      { users: 1400, arpu: 310, delta: '-12%' },
+      { users: 1600, arpu: 286, delta: '-16%' },
+      { users: 1800, arpu: 262, delta: '-20%' },
+      { users: 2000, arpu: 238, delta: '-24%' },
+      { users: 2400, arpu: 214, delta: '-28%' },
+      { users: 2800, arpu: 190, delta: '-32%' },
+    ],
+  },
+  {
+    id: 'neworbit',
+    label: 'New Orbit',
+    sig: 'High embedding instability, 30-90 day tenure, service exploration pattern',
+    color: '#DA2441',
+    attention: true,
+    stats: [
+      { users: 600, arpu: 198, delta: '-22%' },
+      { users: 680, arpu: 184, delta: '-26%' },
+      { users: 780, arpu: 170, delta: '-30%' },
+      { users: 880, arpu: 156, delta: '-34%' },
+      { users: 1020, arpu: 142, delta: '-38%' },
+      { users: 1200, arpu: 128, delta: '-42%' },
+    ],
+  },
+  {
+    id: 'undefined',
+    label: 'Undefined',
+    sig: 'Vectors between clusters — active signals that don\'t match any known behavioral pattern',
+    color: '#546E7A',
+    attention: true,
+    // KEY INSIGHT: these users are doing things the platform doesn't have products for.
+    // Free product intelligence — the embedding space tells you what you're missing.
+    stats: [
+      { users: 420, arpu: 348, delta: '+8%' },
+      { users: 480, arpu: 362, delta: '+10%' },
+      { users: 560, arpu: 378, delta: '+12%' },
+      { users: 640, arpu: 396, delta: '+14%' },
+      { users: 740, arpu: 418, delta: '+16%' },
+      { users: 860, arpu: 442, delta: '+18%' },
+    ],
+  },
+]
+
+/*
+ * Detected behavioral patterns within the Undefined cluster.
+ * These are cross-dimensional correlations the platform surfaced
+ * automatically — they represent unmet product/service demand.
+ */
+const UNDEFINED_PATTERNS = [
+  {
+    name: 'Health Circuit',
+    strength: 82,
+    color: '#00C853',
+    signals: 'Pharmacy UPI (3.2x avg), health content 40min/day, morning activity spikes 5-7 AM',
+    gap: 'No JioHealth product exists. These users are self-organising around health — fitness tracking, pharmacy orders, wellness content — across fragmented services.',
+    opportunity: 'JioHealth super-app: pharmacy delivery, fitness tracking, telemedicine. Est. ₹180 ARPU uplift.',
+    users: 340,
+  },
+  {
+    name: 'Education Orbit',
+    strength: 71,
+    color: '#0F3CC9',
+    signals: 'EdTech content 2.1 hrs/day, Study Lane heavy usage, exam-period session spikes, parent-child device pairing',
+    gap: 'Guardian Mesh and Study Lane exist, but no dedicated education product. Users cobble together JioCinema docs + YouTube + third-party apps.',
+    opportunity: 'JioLearn: curated education content, exam prep, parent dashboards. Est. ₹120 ARPU uplift.',
+    users: 280,
+  },
+  {
+    name: 'Creator Pulse',
+    strength: 64,
+    color: '#D9008D',
+    signals: 'Upload bandwidth 4x avg, video editing app usage, social sharing spikes, high AI token consumption for content',
+    gap: 'Platform optimised for consumption, not creation. These users are creators using Jio infrastructure but no creator tools exist.',
+    opportunity: 'JioStudio: creator toolkit, cloud editing, monetisation. Est. ₹220 ARPU uplift.',
+    users: 160,
+  },
+  {
+    name: 'Micro-Business',
+    strength: 58,
+    color: '#EFA73D',
+    signals: 'B2B UPI patterns, inventory-like order cycles, multiple SIM profiles, high commerce + finance cross-dim',
+    gap: 'Kirana network serves buyers. These are sellers and micro-entrepreneurs using consumer tools for business.',
+    opportunity: 'JioBusiness lite: invoicing, inventory, B2B payments. Est. ₹310 ARPU uplift.',
+    users: 80,
+  },
+]
+
+/*
+ * Cluster positions — organic, not grid.
+ * Top-right = best (high breadth, high frequency)
+ * Bottom-left = worst (low breadth, low frequency)
+ */
+const CENTERS = {
+  fullspectrum:     [{ x: 360, y: 38 }, { x: 358, y: 39 }, { x: 356, y: 40 }, { x: 354, y: 41 }, { x: 352, y: 42 }, { x: 350, y: 43 }],
+  contentgravity:   [{ x: 220, y: 48 }, { x: 220, y: 49 }, { x: 220, y: 50 }, { x: 220, y: 51 }, { x: 220, y: 52 }, { x: 220, y: 54 }],
+  commercecircuit:  [{ x: 340, y: 115 }, { x: 338, y: 116 }, { x: 334, y: 118 }, { x: 330, y: 120 }, { x: 324, y: 123 }, { x: 318, y: 126 }],
+  routineloop:      [{ x: 370, y: 74 }, { x: 370, y: 75 }, { x: 370, y: 76 }, { x: 370, y: 77 }, { x: 370, y: 78 }, { x: 370, y: 79 }],
+  signalsparse:     [{ x: 68, y: 56 }, { x: 68, y: 57 }, { x: 68, y: 58 }, { x: 69, y: 59 }, { x: 70, y: 60 }, { x: 71, y: 62 }],
+  burstepisodic:    [{ x: 190, y: 130 }, { x: 192, y: 130 }, { x: 194, y: 131 }, { x: 196, y: 132 }, { x: 198, y: 133 }, { x: 200, y: 134 }],
+  drifttrajectory:  [{ x: 230, y: 170 }, { x: 234, y: 170 }, { x: 238, y: 171 }, { x: 242, y: 172 }, { x: 248, y: 173 }, { x: 254, y: 174 }],
+  neworbit:         [{ x: 80, y: 178 }, { x: 82, y: 178 }, { x: 86, y: 178 }, { x: 90, y: 178 }, { x: 96, y: 178 }, { x: 102, y: 178 }],
+  undefined:        [{ x: 140, y: 92 }, { x: 142, y: 92 }, { x: 144, y: 93 }, { x: 146, y: 94 }, { x: 148, y: 95 }, { x: 150, y: 96 }],
 }
 
-/* ── Gap zones (people with no offer) ── */
-const GAPS_BY_SCENARIO = {
-  home: [
-    { id: 'heavy-ai', label: 'Heavy AI Users', potential: '₹8.1Cr', x: 80, y: 240, people: 22, spread: 18, seed: 661, color: '#DA2441' },
-    { id: 'sme-bulk', label: 'SME Bulk Tokens', potential: '₹5.3Cr', x: 360, y: 260, people: 18, spread: 15, seed: 771, color: '#DA2441' },
-  ],
-  commerce: [
-    { id: 'rural-mile', label: 'Rural Last-Mile', potential: '₹5.1Cr', x: 360, y: 240, people: 20, spread: 18, seed: 661, color: '#DA2441' },
-    { id: 'ondc', label: 'ONDC Integration', potential: '₹8.3Cr', x: 160, y: 270, people: 22, spread: 16, seed: 771, color: '#DA2441' },
-  ],
-  support: [
-    { id: 'complex-bill', label: 'Complex Billing', potential: '₹3.2Cr', x: 350, y: 240, people: 18, spread: 15, seed: 661, color: '#DA2441' },
-    { id: 'multi-lang', label: 'Multi-language', potential: '₹5.7Cr', x: 170, y: 270, people: 22, spread: 18, seed: 771, color: '#DA2441' },
-  ],
-  finance: [
-    { id: 'micro-loan', label: 'Micro-loans Rural', potential: '₹7.4Cr', x: 360, y: 230, people: 20, spread: 16, seed: 661, color: '#DA2441' },
-    { id: 'cross-border', label: 'Cross-border Pay', potential: '₹4.1Cr', x: 180, y: 270, people: 18, spread: 15, seed: 771, color: '#DA2441' },
-  ],
+const RADII = {
+  fullspectrum:     [18, 18, 17, 17, 16, 16],
+  contentgravity:   [22, 22, 22, 22, 22, 22],
+  commercecircuit:  [20, 20, 19, 18, 17, 16],
+  routineloop:      [14, 14, 15, 15, 15, 15],
+  signalsparse:     [30, 30, 30, 30, 30, 30],
+  burstepisodic:    [18, 18, 18, 18, 18, 18],
+  drifttrajectory:  [12, 14, 16, 18, 22, 28],
+  neworbit:         [8, 10, 12, 14, 16, 20],
+  undefined:        [10, 12, 13, 15, 17, 20],
 }
 
-/* ── Action vectors (cumulative drift) ── */
-const VECTORS = {
-  'service-tap':     { x: 1.2,  y: -0.8, color: '#D9008D' },
-  'search-tap':      { x: -0.6, y: -1.8, color: '#D9008D' },
-  'plan-select':     { x: 3.5,  y: -1.0, color: '#00C853' },
-  'chat-reply':      { x: 0.5,  y: 1.2,  color: '#7B1FA2' },
-  'ai-tap':          { x: 1.8,  y: 0.5,  color: '#7B1FA2' },
-  'finance-action':  { x: -2.5, y: 2.5,  color: '#0F3CC9' },
-  'transaction-tap': { x: -1.8, y: 2.2,  color: '#0F3CC9' },
-  'quick-action':    { x: 1.0,  y: 0.4,  color: '#7B1FA2' },
-  'promo-tap':       { x: 0.8,  y: 1.0,  color: '#7B1FA2' },
-  'tab-tap':         { x: 0.4,  y: 0.2,  color: 'rgba(0,0,0,0.35)' },
-  'nav-back':        { x: -0.3, y: -0.1, color: 'rgba(0,0,0,0.35)' },
-  'voice-order':     { x: 2.5,  y: -1.5, color: '#7B1FA2' },
-  'store-select':    { x: 1.5,  y: 0.8,  color: '#00C853' },
-  'basket-confirm':  { x: 2.0,  y: -0.5, color: '#0F3CC9' },
-  'delivery-track':  { x: -1.0, y: 1.5,  color: '#EFA73D' },
+const COUNTS = {
+  fullspectrum:     [16, 16, 15, 15, 14, 14],
+  contentgravity:   [22, 22, 22, 22, 22, 22],
+  commercecircuit:  [18, 18, 17, 16, 15, 14],
+  routineloop:      [10, 10, 10, 10, 10, 10],
+  signalsparse:     [32, 32, 32, 32, 32, 32],
+  burstepisodic:    [16, 16, 16, 16, 16, 16],
+  drifttrajectory:  [6, 8, 10, 12, 16, 20],
+  neworbit:         [4, 5, 6, 7, 8, 10],
+  undefined:        [5, 6, 7, 8, 10, 12],
 }
 
-function dist(a, b) { return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2) }
+const ARJUN = [
+  { x: 368, y: 34 }, { x: 366, y: 35 }, { x: 364, y: 36 },
+  { x: 362, y: 38 }, { x: 360, y: 40 }, { x: 358, y: 41 },
+]
 
-export default function ClusterMap({ lastEvent, eventCount, scenario }) {
-  /* Generate all people dots once */
-  const offers = OFFERS_BY_SCENARIO[scenario] || OFFERS_BY_SCENARIO.home
-  const gaps = GAPS_BY_SCENARIO[scenario] || GAPS_BY_SCENARIO.home
-  const offerPeople = useMemo(() => offers.flatMap(o =>
-    gaussian(o.x, o.y, o.people, o.spread, o.seed).map(p => ({ ...p, color: o.color, offerId: o.id }))
-  ), [offers])
-  const gapPeople = useMemo(() => gaps.flatMap(g =>
-    gaussian(g.x, g.y, g.people, g.spread, g.seed).map(p => ({ ...p, color: g.color, gapId: g.id }))
-  ), [gaps])
-
-  const VASCO_START = { x: 185, y: 130 }
-  const [vascoPos, setVascoPos] = useState(VASCO_START)
-  const [vascoColor, setVascoColor] = useState('#0F3CC9')
-  const [trail, setTrail] = useState([VASCO_START])
-  const [actionCount, setActionCount] = useState(0)
-
-  /* Nearest offer to Vasco */
-  const nearestOffer = useMemo(() => {
-    let best = null, bestD = Infinity
-    for (const o of offers) {
-      const d = dist(vascoPos, o)
-      if (d < bestD) { bestD = d; best = { ...o, dist: d } }
-    }
-    return best
-  }, [vascoPos, offers])
-
-  const isNearOffer = nearestOffer && nearestOffer.dist < 40
-
-  useEffect(() => {
-    if (!lastEvent) return
-    const vec = VECTORS[lastEvent.type] || { x: 0.3, y: 0.2, color: 'rgba(0,0,0,0.35)' }
-    setVascoColor(vec.color)
-    setVascoPos(prev => {
-      const nx = Math.max(20, Math.min(400, prev.x + vec.x))
-      const ny = Math.max(20, Math.min(295, prev.y + vec.y))
-      setTrail(t => [...t.slice(-25), { x: nx, y: ny }])
-      return { x: nx, y: ny }
+/* Pre-compute dots */
+function buildDots() {
+  const all = []
+  for (let m = 0; m < 6; m++) {
+    const month = []
+    CLUSTERS.forEach(c => {
+      const ctr = CENTERS[c.id][m]
+      const rad = RADII[c.id][m]
+      const cnt = COUNTS[c.id][m]
+      const rng = mulberry32(c.id.charCodeAt(0) * 1000 + c.id.charCodeAt(2) * 100 + m * 7)
+      for (let i = 0; i < cnt; i++) {
+        const [gx, gy] = gaussPair(rng)
+        month.push({
+          id: `${c.id}-${m}-${i}`,
+          cid: c.id,
+          x: ctr.x + gx * rad * 0.44,
+          y: ctr.y + gy * rad * 0.44,
+          r: 1.8 + rng() * 1.2,
+          op: 0.25 + rng() * 0.35,
+        })
+      }
     })
-    setActionCount(c => c + 1)
-  }, [lastEvent])
+    all.push(month)
+  }
+  return all
+}
+const ALL_DOTS = buildDots()
+
+/*
+ * Map event types → cluster affinity.
+ * When the user interacts with commerce, Arjun's vector drifts
+ * toward Commerce Circuits in the embedding space, etc.
+ */
+const EVENT_DRIFT = {
+  'store-select':    'commercecircuit',
+  'basket-confirm':  'commercecircuit',
+  'voice-order':     'commercecircuit',
+  'delivery-track':  'commercecircuit',
+  'finance-action':  'commercecircuit',
+  'transaction-tap': 'commercecircuit',
+  'chat-reply':      'routineloop',
+  'ai-tap':          'fullspectrum',
+  'voice-start':     'fullspectrum',
+  'voice-msg-user':  'fullspectrum',
+  'voice-msg-buddy': 'fullspectrum',
+  'voice-complete':  'fullspectrum',
+  'search-tap':      'contentgravity',
+  'service-tap':     'contentgravity',
+  'promo-tap':       'burstepisodic',
+}
+
+const SCENARIO_CLUSTER = {
+  commerce: 'commercecircuit',
+  support: 'routineloop',
+  finance: 'commercecircuit',
+  home: 'fullspectrum',
+  'slices-ipl': 'fullspectrum',
+  'roaming': 'fullspectrum',
+  'buy-booster': 'fullspectrum',
+  'reorder-groceries': 'commercecircuit',
+  'pay-contact': 'commercecircuit',
+  'run-diagnostics': 'routineloop',
+}
+
+/* ── Component ── */
+export default function ClusterMap({ eventCount, events, onArjunClick, compact }) {
+  const [month, setMonth] = useState(5)
+  const [hovered, setHovered] = useState(null)
+  const [selected, setSelected] = useState(null)
+
+  const dots = ALL_DOTS[month]
+  const baseArjun = ARJUN[month]
+
+  /* Compute drift from recent events — Arjun leans toward active clusters */
+  const arjun = useMemo(() => {
+    if (!events?.length) return baseArjun
+    const weights = {}
+    // Weight recent events more (exponential decay)
+    const recent = events.slice(0, 15)
+    recent.forEach((e, i) => {
+      const cid = e.type?.startsWith('voice-') ? SCENARIO_CLUSTER[e.scenario] : EVENT_DRIFT[e.type]
+      if (!cid) return
+      const w = Math.pow(0.8, i) // newer events have more weight
+      weights[cid] = (weights[cid] || 0) + w
+    })
+    // Compute weighted drift toward cluster centers
+    let dx = 0, dy = 0, total = 0
+    for (const [cid, w] of Object.entries(weights)) {
+      const center = CENTERS[cid]?.[month]
+      if (!center) continue
+      dx += (center.x - baseArjun.x) * w
+      dy += (center.y - baseArjun.y) * w
+      total += w
+    }
+    if (total === 0) return baseArjun
+    // Dampen: max 35% of the way toward the weighted centroid
+    const hasVoice = recent.some(e => e.type?.startsWith('voice-'))
+    const strength = Math.min(hasVoice ? 0.55 : 0.35, total * (hasVoice ? 0.10 : 0.06))
+    return {
+      x: baseArjun.x + (dx / total) * strength,
+      y: baseArjun.y + (dy / total) * strength,
+    }
+  }, [events, month, baseArjun])
+
+  const trail = useMemo(
+    () => ARJUN.slice(0, month + 1).map(p => `${p.x},${p.y}`).join(' '),
+    [month],
+  )
+
+  const meta = useMemo(
+    () => CLUSTERS.map(c => ({
+      ...c, center: CENTERS[c.id][month], radius: RADII[c.id][month],
+      count: COUNTS[c.id][month], s: c.stats[month],
+    })),
+    [month],
+  )
+
+  const handleClick = useCallback(c => {
+    if (c.attention) setSelected(prev => prev === c.id ? null : c.id)
+  }, [])
 
   return (
-    <svg viewBox="0 0 420 310" style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
-      {/* Grid */}
-      {[1,2,3,4,5,6].map(i => <line key={`gx${i}`} x1={i*60} y1={0} x2={i*60} y2={310} stroke="#F0F2F5" strokeWidth={0.4} />)}
-      {[1,2,3,4].map(i => <line key={`gy${i}`} x1={0} y1={i*65} x2={420} y2={i*65} stroke="#F0F2F5" strokeWidth={0.4} />)}
+    <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', padding: '0 0 0 24px' }}>
+        {/* Y-axis */}
+        <div style={{
+          position: 'absolute', left: 0, top: '50%',
+          transform: 'rotate(-90deg) translateX(-50%)', transformOrigin: '0 0',
+          fontSize: 6, fontWeight: 600, color: 'rgba(0,0,0,0.15)',
+          fontFamily: 'var(--font)', letterSpacing: '0.1em', whiteSpace: 'nowrap',
+          textTransform: 'uppercase',
+        }}>SESSION FREQ.</div>
 
-      {/* ── People dots (around offers) ── */}
-      {offerPeople.map((p, i) => (
-        <circle key={`op${i}`} cx={p.x} cy={p.y} r={1.2}
-          fill={p.color} fillOpacity={0.18} />
-      ))}
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="vg" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
 
-      {/* ── Gap people (no offer nearby) ── */}
-      {gapPeople.map((p, i) => (
-        <circle key={`gp${i}`} cx={p.x} cy={p.y} r={1.2}
-          fill={p.color} fillOpacity={0.2} />
-      ))}
+          {/* Subtle grid */}
+          {[0.25, 0.5, 0.75].map(f => (
+            <g key={f}>
+              <line x1={W * f} y1={2} x2={W * f} y2={H - 2} stroke="#E0E0E0" strokeWidth={0.25} strokeOpacity={0.35} />
+              <line x1={2} y1={H * f} x2={W - 2} y2={H * f} stroke="#E0E0E0" strokeWidth={0.25} strokeOpacity={0.35} />
+            </g>
+          ))}
 
-      {/* ── Gap boundaries ── */}
-      {gaps.map(g => (
-        <g key={g.id}>
-          <ellipse cx={g.x} cy={g.y}
-            rx={g.spread + 8} ry={g.spread + 5}
-            fill="none" stroke="#DA2441" strokeWidth={0.8}
-            strokeOpacity={0.2} strokeDasharray="3 3" />
-          <text x={g.x} y={g.y - g.spread - 8}
-            textAnchor="middle" fontSize={7} fontWeight={600}
-            fontFamily="var(--mono)" fill="#DA2441" opacity={0.6}>
-            {g.label}
-          </text>
-          <text x={g.x} y={g.y - g.spread - 0}
-            textAnchor="middle" fontSize={6.5} fontWeight={700}
-            fontFamily="var(--mono)" fill="#DA2441" opacity={0.45}>
-            GAP {g.potential}
-          </text>
-        </g>
-      ))}
+          {/* Cluster boundaries */}
+          {meta.map(c => {
+            const isH = hovered === c.id
+            const isUndef = c.id === 'undefined'
+            return (
+              <g key={c.id}>
+                {c.attention && (
+                  <ellipse cx={c.center.x} cy={c.center.y}
+                    rx={c.radius + 5} ry={c.radius * 0.7 + 3}
+                    fill="none" stroke={c.color} strokeWidth={isUndef ? 0.8 : 0.6}
+                    strokeOpacity={0.1} strokeDasharray={isUndef ? '1.5 3' : '2.5 2'}>
+                    <animate attributeName="stroke-opacity" values={isUndef ? '0.15;0.05;0.15' : '0.1;0.03;0.1'} dur={isUndef ? '2s' : '3s'} repeatCount="indefinite" />
+                  </ellipse>
+                )}
+                {/* Undefined: extra scattered boundary to look "unresolved" */}
+                {isUndef && (
+                  <ellipse cx={c.center.x} cy={c.center.y}
+                    rx={c.radius + 8} ry={c.radius * 0.7 + 5}
+                    fill="none" stroke={c.color} strokeWidth={0.4}
+                    strokeOpacity={0.06} strokeDasharray="1 4">
+                    <animate attributeName="stroke-opacity" values="0.06;0.02;0.06" dur="2.5s" repeatCount="indefinite" />
+                  </ellipse>
+                )}
+                <ellipse cx={c.center.x} cy={c.center.y}
+                  rx={c.radius + 2} ry={c.radius * 0.7 + 1}
+                  fill={c.color} fillOpacity={isH ? 0.05 : 0.015}
+                  stroke={c.color} strokeWidth={isH ? 0.7 : 0.3}
+                  strokeOpacity={isH ? 0.18 : 0.06}
+                  strokeDasharray={isUndef ? '2 3' : (c.attention ? 'none' : '2 2')}
+                  style={{ cursor: c.attention ? 'pointer' : 'default', transition: 'all 0.3s' }}
+                  onMouseEnter={() => setHovered(c.id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => handleClick(c)}
+                />
+                {/* Undefined: question mark icon inside */}
+                {isUndef && !isH && (
+                  <text x={c.center.x} y={c.center.y + 2}
+                    textAnchor="middle" fontSize={8} fontWeight={700}
+                    fontFamily="var(--font)" fill={c.color} fillOpacity={0.12}
+                    style={{ pointerEvents: 'none' }}>
+                    ?
+                  </text>
+                )}
+              </g>
+            )
+          })}
 
-      {/* ── Offer circles ── */}
-      {offers.map(o => {
-        const isNearest = isNearOffer && nearestOffer.id === o.id
-        return (
-          <g key={o.id}>
-            {/* Glow when Vasco is near */}
-            {isNearest && (
-              <circle cx={o.x} cy={o.y} r={o.r + 8}
-                fill={o.color} fillOpacity={0.08}
-                stroke={o.color} strokeWidth={1} strokeOpacity={0.2}>
-                <animate attributeName="r" values={`${o.r + 6};${o.r + 10};${o.r + 6}`} dur="1.5s" repeatCount="indefinite" />
+          {/* Dots */}
+          {dots.map(d => {
+            const cl = CLUSTERS.find(c => c.id === d.cid)
+            return (
+              <circle key={d.id} cx={d.x} cy={d.y} r={d.r}
+                fill={cl?.color || '#999'}
+                fillOpacity={hovered === d.cid ? Math.min(d.op + 0.15, 0.75) : d.op}
+                style={{ transition: 'cx 0.3s ease-out, cy 0.3s ease-out, fill-opacity 0.3s' }}
+              />
+            )
+          })}
+
+          {/* Labels */}
+          {meta.map(c => {
+            const ly = c.center.y - c.radius * 0.7 - 7
+            return (
+              <g key={`l-${c.id}`} style={{ pointerEvents: 'none' }}>
+                <text x={c.center.x} y={ly}
+                  textAnchor="middle" fontSize={6.5} fontWeight={700}
+                  fontFamily="var(--font)" fill={c.color}
+                  fillOpacity={hovered === c.id ? 1 : 0.6}>
+                  {c.label}
+                </text>
+                <text x={c.center.x} y={ly + 8}
+                  textAnchor="middle" fontSize={5} fontWeight={500}
+                  fontFamily="var(--mono)" fill={c.color} fillOpacity={0.35}>
+                  {c.id === 'undefined'
+                    ? `${(c.s.users / 1000).toFixed(1)}k users / click to analyse`
+                    : `${(c.s.users / 1000).toFixed(1)}k / ARPU ${c.s.arpu} / ${c.s.delta}`
+                  }
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Arjun trail */}
+          {month > 0 && (
+            <polyline points={trail} fill="none"
+              stroke="#0F3CC9" strokeWidth={0.8} strokeOpacity={0.12}
+              strokeDasharray="2.5 1.5" strokeLinecap="round" />
+          )}
+          {ARJUN.slice(0, month).map((p, i) => (
+            <circle key={`vt-${i}`} cx={p.x} cy={p.y} r={1}
+              fill="#0F3CC9" fillOpacity={0.06 + (i / Math.max(month, 1)) * 0.12} />
+          ))}
+
+          {/* Arjun activity glow */}
+          {events?.[0] && (Date.now() - events[0].id) < 5000 && (() => {
+            const targetCid = events[0].type?.startsWith('voice-') ? SCENARIO_CLUSTER[events[0].scenario] : EVENT_DRIFT[events[0].type]
+            const targetCluster = CLUSTERS.find(c => c.id === targetCid)
+            const glowColor = targetCluster?.color || '#0F3CC9'
+            return (
+              <circle cx={arjun.x} cy={arjun.y} r={12} fill={glowColor} fillOpacity={0.08}
+                style={{ transition: 'cx 0.3s ease-out, cy 0.3s ease-out' }}>
+                <animate attributeName="r" values="10;16;10" dur="1.5s" repeatCount="indefinite" />
+                <animate attributeName="fill-opacity" values="0.08;0.02;0.08" dur="1.5s" repeatCount="indefinite" />
               </circle>
-            )}
-            {/* Circle */}
-            <circle cx={o.x} cy={o.y} r={o.r}
-              fill="#fff"
-              stroke={o.color}
-              strokeWidth={isNearest ? 2 : 1}
-              strokeOpacity={isNearest ? 0.7 : 0.3}
-              style={{ transition: 'all 0.4s' }}
-            />
-            {/* Offer name */}
-            <text x={o.x} y={o.y - 2}
-              textAnchor="middle" fontSize={6.5} fontWeight={600}
-              fontFamily="var(--mono)" fill={isNearest ? o.color : 'var(--jio-black)'}
-              style={{ transition: 'fill 0.3s' }}>
-              {o.name.length > 16 ? o.name.slice(0, 15) + '…' : o.name}
-            </text>
-            {/* Detail */}
-            <text x={o.x} y={o.y + 7}
-              textAnchor="middle" fontSize={6} fontWeight={500}
-              fontFamily="var(--mono)" fill="rgba(0,0,0,0.3)">
-              {o.detail}
+            )
+          })()}
+
+          {/* Arjun dot */}
+          <g style={{ cursor: 'pointer' }} onClick={() => onArjunClick?.()}>
+            <circle cx={arjun.x} cy={arjun.y} r={8}
+              fill="#0F3CC9" fillOpacity={0.04}
+              style={{ transition: 'cx 0.3s ease-out, cy 0.3s ease-out' }}>
+              <animate attributeName="r" values="7;10;7" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="fill-opacity" values="0.04;0.015;0.04" dur="3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={arjun.x} cy={arjun.y} r={3.5}
+              fill="#0F3CC9" stroke="#fff" strokeWidth={1.2}
+              filter="url(#vg)" style={{ transition: 'cx 0.3s ease-out, cy 0.3s ease-out' }} />
+            <text x={arjun.x - 2} y={arjun.y - 8}
+              textAnchor="middle" fontSize={6} fontWeight={700}
+              fontFamily="var(--font)" fill="#0F3CC9" style={{ pointerEvents: 'none' }}>
+              Arjun S.
             </text>
           </g>
+
+          {/* Hover tooltip */}
+          {hovered && (() => {
+            const c = meta.find(cl => cl.id === hovered)
+            if (!c) return null
+            const tw = 140, th = 54
+            let tx = c.center.x + c.radius + 8
+            if (tx + tw > W - 4) tx = c.center.x - c.radius - tw - 8
+            const ty = Math.max(4, Math.min(c.center.y - 20, H - th - 4))
+            return (
+              <foreignObject x={tx} y={ty} width={tw} height={th} style={{ pointerEvents: 'none' }}>
+                <div xmlns="http://www.w3.org/1999/xhtml" style={{
+                  background: '#fff', borderRadius: 6, padding: '5px 8px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                  border: `1px solid ${c.color}18`, fontFamily: 'var(--font)',
+                }}>
+                  <div style={{ fontSize: 8, fontWeight: 700, color: c.color, marginBottom: 1 }}>{c.label}</div>
+                  <div style={{ fontSize: 6.5, color: 'var(--jio-grey)', lineHeight: 1.5 }}>{c.sig}</div>
+                  <div style={{ fontSize: 6.5, color: 'var(--jio-grey-muted)', marginTop: 1 }}>
+                    {c.s.users.toLocaleString()} users / ARPU ₹{c.s.arpu} / MoM {c.s.delta}
+                  </div>
+                </div>
+              </foreignObject>
+            )
+          })()}
+        </svg>
+
+        {/* X-axis */}
+        <div style={{
+          textAlign: 'center', fontSize: 6, fontWeight: 600,
+          color: 'rgba(0,0,0,0.15)', fontFamily: 'var(--font)',
+          letterSpacing: '0.1em', marginTop: 1, textTransform: 'uppercase',
+        }}>SERVICE BREADTH</div>
+      </div>
+
+      {/* Action card for attention clusters */}
+      {selected && selected !== 'undefined' && (() => {
+        const c = CLUSTERS.find(cl => cl.id === selected)
+        if (!c) return null
+        const s = c.stats[month]
+        const prev = c.stats[Math.max(0, month - 1)]
+        const growth = s.users - prev.users
+        return (
+          <div style={{
+            position: 'absolute', bottom: 48, right: 8,
+            background: '#fff', borderRadius: 10, padding: '10px 14px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+            border: `1px solid ${c.color}20`, fontFamily: 'var(--font)',
+            animation: 'fadeUp 0.25s ease', zIndex: 10, width: 190,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: c.color }}>{c.label}</span>
+              <span style={{ cursor: 'pointer', display: 'flex' }} onClick={() => setSelected(null)}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--jio-grey-muted)" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
+            </div>
+            <div style={{ fontSize: 8, color: 'var(--jio-grey)', lineHeight: 1.5, marginBottom: 6 }}>
+              {s.users.toLocaleString()} users ({growth > 0 ? '+' : ''}{growth} this month).
+              ARPU ₹{s.arpu}, trending {s.delta} MoM.
+              {c.id === 'neworbit'
+                ? ' High embedding instability, vectors moving rapidly. Service exploration pattern — not yet settled into stable cluster.'
+                : ' Vectors compressing toward origin across all dims. Users migrating in from Content Gravity and Commerce Circuits.'}
+            </div>
+            <div style={{ fontSize: 7, color: 'var(--jio-grey-muted)', marginBottom: 6 }}>
+              {c.id === 'neworbit'
+                ? 'Dims shifting: streaming +42%, commerce +28%, AI tokens +65%, vector variance 3.2x avg'
+                : 'Dims declining: session mag. -38%, service breadth -44%, UPI velocity -28%, content hrs -31%'}
+            </div>
+            <button style={{
+              width: '100%', padding: '6px 0', borderRadius: 6, border: 'none',
+              background: c.color, color: '#fff', fontSize: 9, fontWeight: 700,
+              fontFamily: 'var(--font)', cursor: 'pointer', letterSpacing: '0.02em',
+            }} onClick={() => setSelected(null)}>
+              Create Targeted Promotion
+            </button>
+          </div>
         )
-      })}
+      })()}
 
-      {/* ── Vasco trail ── */}
-      {trail.length > 1 && (
-        <polyline
-          points={trail.map(p => `${p.x},${p.y}`).join(' ')}
-          fill="none" stroke={vascoColor} strokeWidth={0.7}
-          strokeOpacity={0.15} strokeLinecap="round" strokeLinejoin="round"
-          style={{ transition: 'stroke 0.3s' }}
+      {/* Undefined cluster analysis panel */}
+      {selected === 'undefined' && (() => {
+        const c = CLUSTERS.find(cl => cl.id === 'undefined')
+        const s = c.stats[month]
+        const prev = c.stats[Math.max(0, month - 1)]
+        const growth = s.users - prev.users
+        return (
+          <div style={{
+            position: 'absolute', bottom: 48, right: 8, left: compact ? 8 : undefined,
+            background: '#fff', borderRadius: 10, padding: '12px 14px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
+            border: '1px solid #546E7A20', fontFamily: 'var(--font)',
+            animation: 'fadeUp 0.25s ease', zIndex: 10,
+            width: compact ? 'auto' : 260, maxHeight: 320, overflowY: 'auto',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#546E7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="#546E7A"/>
+                </svg>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#546E7A' }}>Undefined Cluster</span>
+              </div>
+              <span style={{ cursor: 'pointer', display: 'flex' }} onClick={() => setSelected(null)}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--jio-grey-muted)" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
+            </div>
+
+            {/* Summary */}
+            <div style={{ fontSize: 8, color: 'var(--jio-grey)', lineHeight: 1.5, marginBottom: 8 }}>
+              <span style={{ fontWeight: 700 }}>{s.users.toLocaleString()}</span> users (+{growth} this month).
+              ARPU <span style={{ fontWeight: 700 }}>₹{s.arpu}</span>, trending <span style={{ color: '#00C853', fontWeight: 700 }}>{s.delta}</span> MoM.
+              High ARPU but no product alignment — these users are spending across services that don't exist yet.
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px solid #E0E0E0', margin: '6px 0', position: 'relative' }}>
+              <span style={{ position: 'absolute', top: -6, left: 0, background: '#fff', paddingRight: 6, fontSize: 7, fontWeight: 700, color: '#546E7A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Detected Patterns
+              </span>
+            </div>
+
+            {/* Patterns */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+              {UNDEFINED_PATTERNS.map((p, i) => (
+                <div key={i} style={{ padding: '6px 8px', background: `${p.color}06`, borderRadius: 6, border: `1px solid ${p.color}15` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: p.color }}>{p.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 7, color: 'var(--jio-grey-muted)' }}>{p.users} users</span>
+                      <div style={{ width: 28, height: 3, background: '#E0E0E0', borderRadius: 2 }}>
+                        <div style={{ width: `${p.strength}%`, height: '100%', background: p.color, borderRadius: 2 }} />
+                      </div>
+                      <span style={{ fontSize: 7, fontWeight: 700, color: p.color }}>{p.strength}%</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 7, color: 'var(--jio-grey)', lineHeight: 1.4, marginBottom: 3 }}>{p.signals}</div>
+                  <div style={{ fontSize: 7, color: 'var(--jio-grey-muted)', fontStyle: 'italic', lineHeight: 1.4 }}>{p.gap}</div>
+                  <div style={{ fontSize: 7, color: p.color, fontWeight: 600, marginTop: 3 }}>{p.opportunity}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <button style={{
+              width: '100%', padding: '7px 0', borderRadius: 6, border: 'none',
+              background: '#546E7A', color: '#fff', fontSize: 9, fontWeight: 700,
+              fontFamily: 'var(--font)', cursor: 'pointer', letterSpacing: '0.02em',
+              marginTop: 10,
+            }} onClick={() => setSelected(null)}>
+              Define as Segments
+            </button>
+            <div style={{ fontSize: 7, color: 'var(--jio-grey-muted)', textAlign: 'center', marginTop: 4, fontStyle: 'italic' }}>
+              Platform surfaced these patterns automatically from behavioral embeddings
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Time slider */}
+      <div style={{ padding: '4px 12px 1px', display: 'flex' }}>
+        {MONTHS.map((m, i) => (
+          <div key={m} style={{
+            flex: 1, textAlign: 'center', fontSize: 8,
+            fontWeight: i === month ? 700 : 400,
+            color: i === month ? '#0F3CC9' : 'rgba(0,0,0,0.2)',
+            fontFamily: 'var(--font)', cursor: 'pointer', padding: '2px 0',
+          }} onClick={() => setMonth(i)}>{m}</div>
+        ))}
+      </div>
+      <div style={{ padding: '0 12px 4px' }}>
+        <input type="range" min={0} max={5} step={1} value={month}
+          onChange={e => setMonth(Number(e.target.value))}
+          style={{
+            width: '100%', height: 3, WebkitAppearance: 'none', appearance: 'none',
+            background: `linear-gradient(to right, #0F3CC9 0%, #0F3CC9 ${(month / 5) * 100}%, #E0E0E0 ${(month / 5) * 100}%, #E0E0E0 100%)`,
+            borderRadius: 2, outline: 'none', cursor: 'pointer',
+          }}
         />
-      )}
+      </div>
 
-      {/* ── Vasco ── */}
-      <g>
-        <circle cx={vascoPos.x} cy={vascoPos.y} r={9}
-          fill={vascoColor} fillOpacity={0.06}
-          style={{ transition: 'cx 0.5s ease, cy 0.5s ease, fill 0.3s' }} />
-        <circle cx={vascoPos.x} cy={vascoPos.y} r={4}
-          fill={vascoColor} stroke="#fff" strokeWidth={1.5}
-          style={{ transition: 'cx 0.5s ease, cy 0.5s ease, fill 0.3s' }}>
-          <animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite" />
-        </circle>
-        <text x={vascoPos.x + 9} y={vascoPos.y - 4}
-          fontSize={7.5} fontWeight={600} fontFamily="var(--mono)" fill={vascoColor}
-          style={{ transition: 'all 0.5s ease' }}>
-          vasco_e
-        </text>
-        {actionCount > 0 && (
-          <text x={vascoPos.x + 9} y={vascoPos.y + 5}
-            fontSize={6} fontFamily="var(--mono)" fill="rgba(0,0,0,0.2)"
-            style={{ transition: 'all 0.5s ease' }}>
-            {actionCount} actions
-          </text>
-        )}
-      </g>
-
-      {/* ── Nearest offer label (when close) ── */}
-      {isNearOffer && actionCount > 0 && (
-        <g>
-          <line x1={vascoPos.x} y1={vascoPos.y}
-            x2={nearestOffer.x} y2={nearestOffer.y}
-            stroke={nearestOffer.color} strokeWidth={0.8} strokeOpacity={0.25}
-            strokeDasharray="3 2" />
-          <rect x={nearestOffer.x - 36} y={nearestOffer.y + nearestOffer.r + 4}
-            width={72} height={14} rx={3}
-            fill={nearestOffer.color} fillOpacity={0.08}
-            stroke={nearestOffer.color} strokeWidth={0.5} strokeOpacity={0.2} />
-          <text x={nearestOffer.x} y={nearestOffer.y + nearestOffer.r + 14}
-            textAnchor="middle" fontSize={7} fontWeight={600}
-            fontFamily="var(--mono)" fill={nearestOffer.color}>
-            Recommended
-          </text>
-        </g>
-      )}
-    </svg>
+      {/* Legend — two rows */}
+      <div style={{ padding: '2px 8px 6px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: compact ? '2px 6px' : '2px 8px' }}>
+        {CLUSTERS.map(c => (
+          <div key={c.id} style={{
+            display: 'flex', alignItems: 'center', gap: 3,
+            cursor: c.attention ? 'pointer' : 'default',
+          }} onClick={() => c.attention && handleClick(c)}>
+            <div style={{
+              width: 4, height: 4, borderRadius: '50%',
+              background: c.color, opacity: 0.65,
+            }} />
+            <span style={{
+              fontSize: 6.5, fontWeight: c.attention ? 600 : 400,
+              color: c.color, fontFamily: 'var(--font)', opacity: 0.65,
+            }}>{c.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
