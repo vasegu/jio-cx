@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(docs/**)",
+      "Read(scripts/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__supabase__execute_sql",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scripts/query_guard.py\" --mode pre"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__supabase__execute_sql",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \".claude/scripts/query_post_hook.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

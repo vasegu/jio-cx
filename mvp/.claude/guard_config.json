@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "sensitive_columns": [],
+  "column_name_heuristics": [],
+  "pre_query": {
+    "block_identifier_columns_in_select": true,
+    "block_select_star": true
+  },
+  "post_response": {
+    "block_on_risk_levels": ["HIGH"]
+  }
+}
