@@ -44,6 +44,78 @@ WS2-mvp/
 | Ticket → Experience | folder exists | app/experiences/H1-proactive-credit/ |
 | Experience → Shadow | STATUS.md Shadow column | Ready after component built |
 
+---
+
+## Prototype Phase: Working Voice Agent
+
+**Timeline:** Week 1-2
+**Question:** Can we create the experience we want?
+
+### Objective
+
+Build a working voice agent using Google ADK that demonstrates the core experience: proactive outreach to a customer whose signal dropped.
+
+### Core Experience Flow
+
+```
+1. Signal Detection
+   └─► Customer goes offline (network drop)
+
+2. Memory Write
+   └─► Store: {customer_id, event: "offline", timestamp, context}
+
+3. Signal Detection
+   └─► Customer comes back online
+
+4. Memory Read
+   └─► Retrieve: recent offline event, customer history, preferences
+
+5. Voice Push (Google ADK)
+   └─► "Hi [name], we noticed you were offline for [duration].
+        Sorry about that - here's [offer] to make it right."
+
+6. Memory Update
+   └─► Store: intervention delivered, response
+```
+
+### Tech Stack
+
+#### Google ADK (Primary)
+- Agent framework: ADK agents
+- Voice: Google TTS/STT (or swappable)
+- Orchestration: ADK tools + function calling
+
+#### Memory Layer
+- Pattern: "Human memory" - accumulated context over time
+- Storage: TBD (Firestore? Supabase? Jio's Databricks?)
+- Schema: Signals → Preferences → Interventions → Lifetime metrics
+
+#### Phone UI
+- Reuse: `../WS0-demo/` patterns
+- Modification: Add incoming call/push simulation
+
+### Build Sequence
+
+#### Week 1
+- [ ] Day 1-2: ADK agent scaffold + basic voice response
+- [ ] Day 3-4: Memory layer (in-memory first, then persistent)
+- [ ] Day 5: Phone UI integration (incoming call simulation)
+
+#### Week 2
+- [ ] Day 6-7: Connect to real signals (or realistic mock)
+- [ ] Day 8-9: Personalization from memory
+- [ ] Day 10: Polish, latency optimization, demo prep
+
+### Success Criteria
+
+Working demo that shows:
+- [ ] Voice agent responds naturally
+- [ ] Retrieves customer context from memory
+- [ ] Personalizes the apology + offer
+- [ ] Latency < 2 seconds from trigger to voice
+
+---
+
 ## Check
 
 Before every change to architecture or stack: read `docs/ARCHITECTURE.md` and `docs/GOOGLE-STACK.md`.
