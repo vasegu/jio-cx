@@ -1,4 +1,4 @@
-# Stream 1: Agentic Journey Analysis
+# Agentic Journey Analysis
 
 **Owner:** TBD
 **Timeline:** Week 1-2

@@ -1,4 +1,4 @@
-# Stream 3: Architecture & Voice
+# Architecture & Voice
 
 **Owner:** TBD
 **Timeline:** Week 1-2
@@ -140,7 +140,7 @@ Jio Databricks (320B events)
 │                    Jio CX Agent                      │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
 │  │   Signals   │  │   Memory    │  │    Voice    │  │
-│  │  (Stream 1) │  │  (Stream 2) │  │  (Stream 3) │  │
+│  │ (Journeys)  │  │ (Prototype) │  │   (Arch)    │  │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  │
 │         │                │                │         │
 │         ▼                ▼                ▼         │
