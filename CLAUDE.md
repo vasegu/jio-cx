@@ -28,7 +28,7 @@ bash ~/.claude/skills/linear/scripts/linear.sh project "JIO CX"   # sprint board
 | WS1-discovery/         | Skills run here. Reports land in .claude/reports/. FINDINGS.md feeds here. |
 | WS2-mvp/app/           | Build experiences from validated findings. One folder per hypothesis. |
 | WS2-mvp/docs/          | Reference: ARCHITECTURE, HYPOTHESES, GOOGLE-STACK. |
-| future/                | Phase 4 & beyond. Operational playbooks, evolution. |
+| WS3-production/        | Phase 4 operations. Live system management and evolution. |
 
 ## Assets
 | assets/presentations/   | Edit and ship fast for stakeholders. |

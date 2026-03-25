@@ -1,6 +1,6 @@
-# Future State (Phase 4 & Beyond)
+# WS3 — Production & Operations (Phase 4)
 
-Placeholder for Phase 4 operations and evolution.
+Live system operations and evolution.
 
 When behaviors move from WS2-mvp (Phase 3 hardening) into production operations:
 - Move proven experiences here
