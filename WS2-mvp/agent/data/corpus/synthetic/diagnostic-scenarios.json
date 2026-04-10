@@ -1,0 +1,1018 @@
+[
+  {
+    "scenario_id": "DIAG-001",
+    "customer_complaint": "Bhai internet bahut slow chal raha hai, kuch load nahi hota",
+    "complaint_english": "Internet is very slow, nothing loads",
+    "actual_root_cause": "Too many devices connected, bandwidth saturated on Silver 599 plan",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 8,
+    "speed_ratio": 0.3,
+    "latency_ms": 45,
+    "packet_loss_pct": 0.5,
+    "resolution_steps": [
+      "Check number of connected devices",
+      "Identify bandwidth-heavy devices",
+      "Recommend disconnecting unused devices or upgrading plan",
+      "Suggest Gold 999 for 100Mbps"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "run_speed_test", "check_device_count", "search_plans"],
+    "outcome": "Customer upgraded to Gold 999, speed issue resolved"
+  },
+  {
+    "scenario_id": "DIAG-002",
+    "customer_complaint": "Internet bilkul band hai subah se",
+    "complaint_english": "Internet is completely down since morning",
+    "actual_root_cause": "Fiber cable cut due to nearby construction",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": 100,
+    "resolution_steps": [
+      "Verify router and ONT status",
+      "Check for area-wide outage",
+      "Identify fiber damage",
+      "Dispatch field technician",
+      "Log complaint for tracking"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "log_complaint"],
+    "outcome": "Field technician dispatched, fiber repaired within 6 hours"
+  },
+  {
+    "scenario_id": "DIAG-003",
+    "customer_complaint": "WiFi baar baar disconnect ho raha hai devices se",
+    "complaint_english": "WiFi keeps disconnecting from devices",
+    "actual_root_cause": "WiFi channel congestion from neighboring networks",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 5,
+    "speed_ratio": 0.7,
+    "latency_ms": 15,
+    "packet_loss_pct": 3,
+    "resolution_steps": [
+      "Check WiFi signal and channel",
+      "Identify channel congestion",
+      "Change WiFi channel to less congested one",
+      "Restart router with new settings"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "restart_router"],
+    "outcome": "WiFi channel changed, disconnection issue resolved"
+  },
+  {
+    "scenario_id": "DIAG-004",
+    "customer_complaint": "Speed test mein 10Mbps aa raha hai lekin plan 100Mbps ka hai",
+    "complaint_english": "Speed test shows 10Mbps but plan is 100Mbps",
+    "actual_root_cause": "Router firmware outdated, not supporting full throughput",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.1,
+    "latency_ms": 12,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Run speed test to confirm",
+      "Check router health and firmware version",
+      "Update router firmware",
+      "Restart router after update",
+      "Re-run speed test to verify"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_router_health", "restart_router", "run_speed_test"],
+    "outcome": "Firmware updated, speed restored to plan level"
+  },
+  {
+    "scenario_id": "DIAG-005",
+    "customer_complaint": "Naya phone WiFi se connect nahi ho raha hai",
+    "complaint_english": "New phone cannot connect to WiFi",
+    "actual_root_cause": "DHCP pool exhausted, too many device leases",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 10,
+    "speed_ratio": 0.85,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check current device count",
+      "Identify DHCP pool exhaustion",
+      "Release stale DHCP leases",
+      "Restart router to refresh pool",
+      "Connect new device"
+    ],
+    "tools_used": ["get_customer_profile", "check_device_count", "check_router_health", "restart_router"],
+    "outcome": "DHCP pool refreshed, new device connected successfully"
+  },
+  {
+    "scenario_id": "DIAG-006",
+    "customer_complaint": "Raat ko 8 baje ke baad internet bahut slow ho jaata hai",
+    "complaint_english": "Internet becomes very slow after 8 PM",
+    "actual_root_cause": "Area network congestion during peak hours",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.25,
+    "latency_ms": 80,
+    "packet_loss_pct": 2,
+    "resolution_steps": [
+      "Run speed test to confirm low speed",
+      "Check if issue is area-wide",
+      "Log complaint for network capacity review",
+      "Suggest upgrading to higher plan for better priority"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_connection_status", "log_complaint", "search_plans"],
+    "outcome": "Complaint logged, network team increased area capacity"
+  },
+  {
+    "scenario_id": "DIAG-007",
+    "customer_complaint": "Router pe red light aa rahi hai aur internet nahi chal raha",
+    "complaint_english": "Red light on router and internet not working",
+    "actual_root_cause": "ONT fiber connector loose, LOS alarm triggered",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": 100,
+    "resolution_steps": [
+      "Check router health for LOS alarm",
+      "Guide customer to check fiber cable connection",
+      "If unable to resolve, dispatch field technician",
+      "Log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "check_connection_status", "log_complaint"],
+    "outcome": "Field technician tightened fiber connector, service restored"
+  },
+  {
+    "scenario_id": "DIAG-008",
+    "customer_complaint": "Gaming mein bahut lag aa raha hai, ping 200+ hai",
+    "complaint_english": "High lag in gaming, ping over 200ms",
+    "actual_root_cause": "Packet loss due to faulty ethernet cable, customer on WiFi with interference",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 6,
+    "speed_ratio": 0.6,
+    "latency_ms": 210,
+    "packet_loss_pct": 8,
+    "resolution_steps": [
+      "Run speed test to check latency and packet loss",
+      "Check router health for signal issues",
+      "Recommend wired ethernet connection for gaming",
+      "Suggest QoS configuration for gaming priority"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_router_health", "check_connection_status"],
+    "outcome": "Customer switched to wired connection, ping reduced to 15ms"
+  },
+  {
+    "scenario_id": "DIAG-009",
+    "customer_complaint": "Netflix pe bahut buffering hoti hai, dekhna mushkil hai",
+    "complaint_english": "Heavy buffering on Netflix, difficult to watch",
+    "actual_root_cause": "DNS resolution slow, default DNS causing latency to streaming servers",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.75,
+    "latency_ms": 35,
+    "packet_loss_pct": 1,
+    "resolution_steps": [
+      "Check speed and connection status",
+      "Verify streaming-specific performance",
+      "Suggest changing DNS to Google or Cloudflare",
+      "Restart router after DNS change"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_connection_status", "restart_router"],
+    "outcome": "DNS changed to 8.8.8.8, streaming buffering resolved"
+  },
+  {
+    "scenario_id": "DIAG-010",
+    "customer_complaint": "Bedroom mein WiFi nahi aata, sirf drawing room mein chalta hai",
+    "complaint_english": "WiFi doesn't reach bedroom, only works in living room",
+    "actual_root_cause": "Router placed in corner, thick walls blocking signal",
+    "cpe_status": "online",
+    "wifi_signal": "poor",
+    "connected_devices": 3,
+    "speed_ratio": 0.4,
+    "latency_ms": 25,
+    "packet_loss_pct": 5,
+    "resolution_steps": [
+      "Check router health and signal strength",
+      "Assess WiFi coverage pattern",
+      "Recommend repositioning router to central location",
+      "Suggest mesh WiFi extender if home is large"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "check_connection_status", "search_plans"],
+    "outcome": "Router repositioned, WiFi coverage improved significantly"
+  },
+  {
+    "scenario_id": "DIAG-011",
+    "customer_complaint": "Router apne aap restart hota rehta hai din mein 5-6 baar",
+    "complaint_english": "Router restarts by itself 5-6 times a day",
+    "actual_root_cause": "Router overheating due to poor ventilation",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 4,
+    "speed_ratio": 0.65,
+    "latency_ms": 20,
+    "packet_loss_pct": 2,
+    "resolution_steps": [
+      "Check router health for temperature alerts",
+      "Guide customer on proper router placement for ventilation",
+      "If hardware issue, arrange router replacement",
+      "Log complaint for tracking"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "log_complaint"],
+    "outcome": "Router moved to ventilated area, reboots stopped"
+  },
+  {
+    "scenario_id": "DIAG-012",
+    "customer_complaint": "Mera bill galat aaya hai, extra 500 rupaye charge kiye hain",
+    "complaint_english": "Incorrect bill, charged extra 500 rupees",
+    "actual_root_cause": "Installation charges incorrectly applied on second month",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and plan details",
+      "Review billing history",
+      "Identify incorrect charge",
+      "Log complaint for billing correction",
+      "Assure customer of credit in next bill"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "log_complaint"],
+    "outcome": "Billing error identified, credit issued for next cycle"
+  },
+  {
+    "scenario_id": "DIAG-013",
+    "customer_complaint": "Installation ka date de diya tha lekin koi nahi aaya",
+    "complaint_english": "Installation date was given but no one showed up",
+    "actual_root_cause": "Installation team overbooked, appointment not confirmed",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": null,
+    "resolution_steps": [
+      "Check customer profile for installation status",
+      "Verify appointment scheduling",
+      "Escalate to installation supervisor",
+      "Provide new confirmed date",
+      "Log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "log_complaint"],
+    "outcome": "Priority installation scheduled for next day, completed successfully"
+  },
+  {
+    "scenario_id": "DIAG-014",
+    "customer_complaint": "Payment kar diya but account mein reflect nahi ho raha",
+    "complaint_english": "Payment made but not reflected in account",
+    "actual_root_cause": "Payment gateway delay, transaction stuck in processing",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.85,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile for payment status",
+      "Verify transaction reference number",
+      "Log complaint for finance team review",
+      "Assure customer payment will be reconciled within 24-48 hours"
+    ],
+    "tools_used": ["get_customer_profile", "log_complaint"],
+    "outcome": "Payment reconciled within 24 hours, account updated"
+  },
+  {
+    "scenario_id": "DIAG-015",
+    "customer_complaint": "Plan upgrade karna hai, Diamond wala chahiye",
+    "complaint_english": "Want to upgrade plan to Diamond",
+    "actual_root_cause": "Customer wants higher speed for work from home",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 5,
+    "speed_ratio": 0.9,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check current plan details",
+      "Search available plans",
+      "Get Diamond 1499 plan details",
+      "Process upgrade request"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans", "get_plan_details"],
+    "outcome": "Plan upgraded to Diamond 1499, customer satisfied"
+  },
+  {
+    "scenario_id": "DIAG-016",
+    "customer_complaint": "Koi aur mera WiFi use kar raha hai, unknown device dikh raha hai",
+    "complaint_english": "Someone else is using my WiFi, unknown device visible",
+    "actual_root_cause": "Neighbor guessed simple WiFi password",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 7,
+    "speed_ratio": 0.5,
+    "latency_ms": 18,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check device count and list connected devices",
+      "Identify unknown devices",
+      "Guide customer to change WiFi password to strong one",
+      "Restart router with new password"
+    ],
+    "tools_used": ["get_customer_profile", "check_device_count", "check_router_health", "restart_router"],
+    "outcome": "WiFi password changed, unauthorized device removed"
+  },
+  {
+    "scenario_id": "DIAG-017",
+    "customer_complaint": "VPN connect nahi ho raha hai office wala",
+    "complaint_english": "Office VPN not connecting",
+    "actual_root_cause": "Port blocking by default firewall settings on router",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.85,
+    "latency_ms": 12,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check connection status and speed",
+      "Verify router health and firewall settings",
+      "Guide customer to adjust router firewall for VPN passthrough",
+      "Restart router after configuration change"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "restart_router"],
+    "outcome": "VPN passthrough enabled, office VPN connected successfully"
+  },
+  {
+    "scenario_id": "DIAG-018",
+    "customer_complaint": "WiFi password bhool gaya hu, naye phone mein connect karna hai",
+    "complaint_english": "Forgot WiFi password, need to connect new phone",
+    "actual_root_cause": "Customer forgot WiFi password",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Verify customer identity",
+      "Check router health for admin access",
+      "Guide customer to access router admin panel at 192.168.1.1",
+      "Help customer find and reset WiFi password"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health"],
+    "outcome": "Customer accessed router admin, WiFi password retrieved"
+  },
+  {
+    "scenario_id": "DIAG-019",
+    "customer_complaint": "Data khatam ho gaya hai, speed bahut slow ho gayi",
+    "complaint_english": "Data exhausted, speed very slow now",
+    "actual_root_cause": "FUP limit reached, speed throttled per plan policy",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 5,
+    "speed_ratio": 0.05,
+    "latency_ms": 50,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and data usage",
+      "Confirm FUP limit reached",
+      "Explain FUP policy",
+      "Suggest plan upgrade for higher data limit or unlimited plan"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans"],
+    "outcome": "Customer understood FUP policy, upgraded to higher plan"
+  },
+  {
+    "scenario_id": "DIAG-020",
+    "customer_complaint": "Connection cancel karna hai, bahut problems aa rahe hain",
+    "complaint_english": "Want to cancel connection, too many problems",
+    "actual_root_cause": "Frustrated customer with recurring issues, retention opportunity",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 4,
+    "speed_ratio": 0.6,
+    "latency_ms": 30,
+    "packet_loss_pct": 2,
+    "resolution_steps": [
+      "Check customer profile and complaint history",
+      "Understand specific pain points",
+      "Offer resolution for pending issues",
+      "Offer plan upgrade or discount as retention",
+      "If insisted, process cancellation and log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "check_complaint_status", "check_connection_status", "search_plans", "log_complaint"],
+    "outcome": "Customer retained with free plan upgrade for 3 months"
+  },
+  {
+    "scenario_id": "DIAG-021",
+    "customer_complaint": "Meri complaint ka koi update nahi diya gaya",
+    "complaint_english": "No update given on my complaint",
+    "actual_root_cause": "Previous complaint stuck in queue, no assignment",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 3,
+    "speed_ratio": 0.5,
+    "latency_ms": 25,
+    "packet_loss_pct": 1,
+    "resolution_steps": [
+      "Check customer profile",
+      "Check existing complaint status",
+      "Escalate unresolved complaint",
+      "Provide updated timeline to customer"
+    ],
+    "tools_used": ["get_customer_profile", "check_complaint_status", "log_complaint"],
+    "outcome": "Previous complaint escalated, resolved within 4 hours"
+  },
+  {
+    "scenario_id": "DIAG-022",
+    "customer_complaint": "Kuch websites nahi khul rahi, baaki sab chal raha hai",
+    "complaint_english": "Some websites not opening, everything else works",
+    "actual_root_cause": "DNS resolution failing for specific domains",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.9,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check connection status and speed",
+      "Verify DNS resolution working",
+      "Suggest changing DNS to 8.8.8.8 or 1.1.1.1",
+      "Restart router after DNS change"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "run_speed_test", "restart_router"],
+    "outcome": "DNS changed to Google DNS, all websites accessible"
+  },
+  {
+    "scenario_id": "DIAG-023",
+    "customer_complaint": "Router on hi nahi ho raha, koi light nahi jal rahi",
+    "complaint_english": "Router not turning on, no lights",
+    "actual_root_cause": "Power adapter failed",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": null,
+    "resolution_steps": [
+      "Confirm router power status",
+      "Guide customer to check power cable and outlet",
+      "Try different power outlet",
+      "If still not powering on, arrange adapter/router replacement",
+      "Log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "log_complaint"],
+    "outcome": "Power adapter replaced, router functioning normally"
+  },
+  {
+    "scenario_id": "DIAG-024",
+    "customer_complaint": "Smart TV mein internet nahi aa raha, phone mein chal raha hai",
+    "complaint_english": "No internet on Smart TV but phone works fine",
+    "actual_root_cause": "TV connected to 5GHz band with weak reception, phone on 2.4GHz",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 5,
+    "speed_ratio": 0.85,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check overall connection status",
+      "Check device count and connections",
+      "Verify TV network settings",
+      "Guide customer to connect TV to 2.4GHz band",
+      "Restart router to broadcast both bands"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_device_count", "restart_router"],
+    "outcome": "TV connected to 2.4GHz band, streaming working"
+  },
+  {
+    "scenario_id": "DIAG-025",
+    "customer_complaint": "Installation ho gaya lekin speed plan se bahut kam aa rahi hai",
+    "complaint_english": "Installation done but speed much lower than plan",
+    "actual_root_cause": "Provisioning not completed, port still on default profile",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 2,
+    "speed_ratio": 0.15,
+    "latency_ms": 15,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and plan",
+      "Run speed test to confirm low speed",
+      "Check connection status for provisioning",
+      "Escalate to backend for provisioning correction",
+      "Re-run speed test after fix"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_connection_status", "get_plan_details", "log_complaint"],
+    "outcome": "Provisioning corrected, speed matched plan within 2 hours"
+  },
+  {
+    "scenario_id": "DIAG-026",
+    "customer_complaint": "Work from home mein video calls baar baar disconnect hoti hain",
+    "complaint_english": "Video calls keep disconnecting during work from home",
+    "actual_root_cause": "High jitter and packet loss on WiFi, too many devices competing",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 8,
+    "speed_ratio": 0.5,
+    "latency_ms": 60,
+    "packet_loss_pct": 6,
+    "resolution_steps": [
+      "Run speed test for latency and packet loss",
+      "Check device count",
+      "Recommend wired connection for work laptop",
+      "Suggest reducing concurrent devices during calls",
+      "Consider plan upgrade for more bandwidth"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_device_count", "check_connection_status", "search_plans"],
+    "outcome": "Customer used wired connection, video call quality improved"
+  },
+  {
+    "scenario_id": "DIAG-027",
+    "customer_complaint": "Router bahut garam ho raha hai, chhune mein bhi jalta hai",
+    "complaint_english": "Router getting very hot, burns to touch",
+    "actual_root_cause": "Router placed in enclosed cabinet with no airflow",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 5,
+    "speed_ratio": 0.7,
+    "latency_ms": 20,
+    "packet_loss_pct": 1,
+    "resolution_steps": [
+      "Check router health for temperature warnings",
+      "Guide customer to move router to open area",
+      "Ensure adequate ventilation around router",
+      "Monitor temperature after relocation"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health"],
+    "outcome": "Router moved to open shelf, temperature normalized"
+  },
+  {
+    "scenario_id": "DIAG-028",
+    "customer_complaint": "Plan downgrade karna hai, itna speed nahi chahiye",
+    "complaint_english": "Want to downgrade plan, don't need this much speed",
+    "actual_root_cause": "Customer on Platinum 2499, wants to reduce cost",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.9,
+    "latency_ms": 5,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and current plan",
+      "Understand customer needs",
+      "Search available plans for lower tier",
+      "Get plan details for recommended plan",
+      "Process downgrade request"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans"],
+    "outcome": "Customer downgraded to Gold 999, satisfied with savings"
+  },
+  {
+    "scenario_id": "DIAG-029",
+    "customer_complaint": "Fiber cable toot gayi hai bahar construction mein",
+    "complaint_english": "Fiber cable broken during outside construction",
+    "actual_root_cause": "Physical fiber cable damage by third party",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": 100,
+    "resolution_steps": [
+      "Verify outage status",
+      "Confirm physical cable damage",
+      "Dispatch field technician immediately",
+      "Log priority complaint",
+      "Provide ETA for repair"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "log_complaint"],
+    "outcome": "Emergency fiber repair completed in 8 hours"
+  },
+  {
+    "scenario_id": "DIAG-030",
+    "customer_complaint": "Har mahine ka bill alag alag aata hai, samajh nahi aata",
+    "complaint_english": "Bill amount different each month, confusing",
+    "actual_root_cause": "Prorated charges and one-time fees causing bill variation",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and plan",
+      "Get plan details with pricing breakdown",
+      "Explain billing components clearly",
+      "If error found, log complaint for correction"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details"],
+    "outcome": "Billing explained, customer understood prorated charges"
+  },
+  {
+    "scenario_id": "DIAG-031",
+    "customer_complaint": "Internet subah achha chalta hai lekin shaam ko problem hoti hai",
+    "complaint_english": "Internet works fine in morning but problems in evening",
+    "actual_root_cause": "Household devices increase in evening - kids streaming, family on WiFi",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.35,
+    "latency_ms": 55,
+    "packet_loss_pct": 1,
+    "resolution_steps": [
+      "Run speed test",
+      "Check device count during evening",
+      "Identify bandwidth-heavy usage",
+      "Suggest QoS settings or plan upgrade"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_device_count", "search_plans"],
+    "outcome": "Customer upgraded plan to accommodate family usage"
+  },
+  {
+    "scenario_id": "DIAG-032",
+    "customer_complaint": "AirFiber lagwaya hai lekin signal fluctuate karta hai",
+    "complaint_english": "AirFiber installed but signal keeps fluctuating",
+    "actual_root_cause": "AirFiber antenna alignment slightly off, weather affecting signal",
+    "cpe_status": "online",
+    "wifi_signal": "poor",
+    "connected_devices": 3,
+    "speed_ratio": 0.4,
+    "latency_ms": 40,
+    "packet_loss_pct": 5,
+    "resolution_steps": [
+      "Check connection status for signal levels",
+      "Check router health",
+      "Dispatch technician for antenna realignment",
+      "Log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "log_complaint"],
+    "outcome": "Antenna realigned, signal stabilized"
+  },
+  {
+    "scenario_id": "DIAG-033",
+    "customer_complaint": "Zoom call mein meri awaaz kat ke jaati hai dusron ko",
+    "complaint_english": "My voice cuts out for others on Zoom calls",
+    "actual_root_cause": "Upload speed throttled due to bandwidth congestion",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 6,
+    "speed_ratio": 0.55,
+    "latency_ms": 45,
+    "packet_loss_pct": 4,
+    "resolution_steps": [
+      "Run speed test focusing on upload speed",
+      "Check device count for competing uploads",
+      "Suggest prioritizing Zoom traffic",
+      "Recommend wired connection for meetings"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_device_count", "check_connection_status"],
+    "outcome": "Customer prioritized wired connection for Zoom, issue resolved"
+  },
+  {
+    "scenario_id": "DIAG-034",
+    "customer_complaint": "Complaint kiya tha 3 din pehle lekin koi solution nahi mila",
+    "complaint_english": "Complained 3 days ago but no solution yet",
+    "actual_root_cause": "Field visit required but not scheduled",
+    "cpe_status": "online",
+    "wifi_signal": "poor",
+    "connected_devices": 3,
+    "speed_ratio": 0.3,
+    "latency_ms": 50,
+    "packet_loss_pct": 3,
+    "resolution_steps": [
+      "Check customer profile and complaint history",
+      "Check previous complaint status",
+      "Escalate unresolved complaint to supervisor",
+      "Schedule immediate field visit if needed"
+    ],
+    "tools_used": ["get_customer_profile", "check_complaint_status", "log_complaint"],
+    "outcome": "Complaint escalated, field visit scheduled for same day"
+  },
+  {
+    "scenario_id": "DIAG-035",
+    "customer_complaint": "Mere plan mein kya kya milta hai batao",
+    "complaint_english": "Tell me what's included in my plan",
+    "actual_root_cause": "Customer seeking plan information",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile for current plan",
+      "Get detailed plan information",
+      "Explain plan features including speed, data, OTT apps",
+      "Suggest upgrade if customer needs more"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans"],
+    "outcome": "Customer informed about plan features, no action needed"
+  },
+  {
+    "scenario_id": "DIAG-036",
+    "customer_complaint": "PUBG mein bahut packet loss ho raha hai",
+    "complaint_english": "High packet loss in PUBG",
+    "actual_root_cause": "WiFi interference from microwave oven on same 2.4GHz frequency",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 5,
+    "speed_ratio": 0.6,
+    "latency_ms": 75,
+    "packet_loss_pct": 10,
+    "resolution_steps": [
+      "Run speed test to measure packet loss",
+      "Check router health for interference",
+      "Suggest switching to 5GHz band for gaming",
+      "Recommend ethernet cable for lowest latency"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_router_health", "check_connection_status"],
+    "outcome": "Switched to 5GHz band and ethernet, packet loss eliminated"
+  },
+  {
+    "scenario_id": "DIAG-037",
+    "customer_complaint": "Mere paas AirFiber hai, fiber mein convert karna hai",
+    "complaint_english": "I have AirFiber, want to convert to fiber",
+    "actual_root_cause": "Customer wants to migrate from wireless to wired fiber",
+    "cpe_status": "online",
+    "wifi_signal": "fair",
+    "connected_devices": 3,
+    "speed_ratio": 0.8,
+    "latency_ms": 20,
+    "packet_loss_pct": 1,
+    "resolution_steps": [
+      "Check customer profile and current AirFiber plan",
+      "Search for equivalent fiber plans",
+      "Explain migration process",
+      "Log request for fiber installation survey"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans", "log_complaint"],
+    "outcome": "Migration request logged, fiber installation scheduled"
+  },
+  {
+    "scenario_id": "DIAG-038",
+    "customer_complaint": "Poora ghar mein bahut saare devices hain speed slow hai",
+    "complaint_english": "Many devices in house causing slow speed",
+    "actual_root_cause": "12 devices on Silver 599 (30Mbps), severely over-subscribed",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 12,
+    "speed_ratio": 0.2,
+    "latency_ms": 65,
+    "packet_loss_pct": 3,
+    "resolution_steps": [
+      "Check customer profile",
+      "Run speed test",
+      "Check device count",
+      "Show mismatch between device count and plan capacity",
+      "Recommend Platinum 2499 or Titanium 3999 for heavy usage"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_device_count", "search_plans", "get_plan_details"],
+    "outcome": "Customer upgraded to Platinum 2499, speed distributed well"
+  },
+  {
+    "scenario_id": "DIAG-039",
+    "customer_complaint": "Internet chalta hai lekin WhatsApp pe images nahi bhej paa raha",
+    "complaint_english": "Internet works but can't send images on WhatsApp",
+    "actual_root_cause": "Upload speed severely limited, connection only partial",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.7,
+    "latency_ms": 15,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check connection status",
+      "Run speed test checking upload separately",
+      "Check router health",
+      "Restart router to reset upload channel"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "run_speed_test", "check_router_health", "restart_router"],
+    "outcome": "Router restart fixed upload issue, WhatsApp working normally"
+  },
+  {
+    "scenario_id": "DIAG-040",
+    "customer_complaint": "Baarish ke baad se internet nahi chal raha",
+    "complaint_english": "Internet not working since it rained",
+    "actual_root_cause": "Water ingress in fiber junction box",
+    "cpe_status": "offline",
+    "wifi_signal": "none",
+    "connected_devices": 0,
+    "speed_ratio": 0,
+    "latency_ms": null,
+    "packet_loss_pct": 100,
+    "resolution_steps": [
+      "Check connection status",
+      "Check router health for fiber signal",
+      "Identify rain-related damage pattern",
+      "Dispatch field technician for junction box inspection",
+      "Log complaint"
+    ],
+    "tools_used": ["get_customer_profile", "check_connection_status", "check_router_health", "log_complaint"],
+    "outcome": "Junction box sealed and fiber reconnected, service restored"
+  },
+  {
+    "scenario_id": "DIAG-041",
+    "customer_complaint": "YouTube videos bahut slow load hote hain 4K mein",
+    "complaint_english": "YouTube videos load very slow in 4K",
+    "actual_root_cause": "Silver 599 (30Mbps) insufficient for 4K streaming which needs 25Mbps minimum",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.85,
+    "latency_ms": 12,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and plan",
+      "Run speed test",
+      "Explain 4K streaming requires minimum 25Mbps dedicated",
+      "With multiple devices, recommend Gold 999 or Diamond 1499"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "get_plan_details", "search_plans"],
+    "outcome": "Customer upgraded to Gold 999, 4K streaming smooth"
+  },
+  {
+    "scenario_id": "DIAG-042",
+    "customer_complaint": "Mera router ka admin password bhool gaya, settings change karni hai",
+    "complaint_english": "Forgot router admin password, need to change settings",
+    "actual_root_cause": "Customer forgot router admin credentials",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Verify customer identity",
+      "Guide through factory reset process",
+      "Help set up new admin password",
+      "Reconfigure WiFi settings after reset"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "restart_router"],
+    "outcome": "Router factory reset, new admin password set"
+  },
+  {
+    "scenario_id": "DIAG-043",
+    "customer_complaint": "Mere area mein kaunse plans available hain",
+    "complaint_english": "What plans are available in my area",
+    "actual_root_cause": "Customer exploring plan options",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 3,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile for location",
+      "Search all available plans",
+      "Get details for plans of interest",
+      "Compare with current plan"
+    ],
+    "tools_used": ["get_customer_profile", "search_plans", "get_plan_details"],
+    "outcome": "Customer informed about all available plans"
+  },
+  {
+    "scenario_id": "DIAG-044",
+    "customer_complaint": "Internet achha hai lekin ek room mein bilkul nahi aata WiFi",
+    "complaint_english": "Internet good but WiFi completely absent in one room",
+    "actual_root_cause": "Metal almirah between router and room blocking WiFi signal",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.8,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check router health for signal pattern",
+      "Identify physical obstruction",
+      "Suggest repositioning router or removing obstruction",
+      "Recommend WiFi mesh extender for large homes"
+    ],
+    "tools_used": ["get_customer_profile", "check_router_health", "check_connection_status"],
+    "outcome": "Router repositioned, WiFi coverage improved in dead zone"
+  },
+  {
+    "scenario_id": "DIAG-045",
+    "customer_complaint": "Printer WiFi se connect nahi ho raha hai network pe",
+    "complaint_english": "Printer not connecting to WiFi network",
+    "actual_root_cause": "Printer only supports 2.4GHz, router broadcasting combined SSID on 5GHz",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 5,
+    "speed_ratio": 0.85,
+    "latency_ms": 10,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check device count and router settings",
+      "Check router health for band configuration",
+      "Guide customer to enable separate 2.4GHz SSID",
+      "Connect printer to 2.4GHz network"
+    ],
+    "tools_used": ["get_customer_profile", "check_device_count", "check_router_health"],
+    "outcome": "Separate 2.4GHz SSID created, printer connected"
+  },
+  {
+    "scenario_id": "DIAG-046",
+    "customer_complaint": "Mere account mein do baar payment kat gaya hai",
+    "complaint_english": "Double payment deducted from my account",
+    "actual_root_cause": "Payment gateway timeout caused duplicate transaction",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile",
+      "Verify double payment with transaction IDs",
+      "Log complaint for immediate refund",
+      "Assure customer of refund timeline"
+    ],
+    "tools_used": ["get_customer_profile", "log_complaint"],
+    "outcome": "Duplicate payment identified, refund processed in 3 days"
+  },
+  {
+    "scenario_id": "DIAG-047",
+    "customer_complaint": "CCTV cameras ke liye stable internet chahiye 24x7",
+    "complaint_english": "Need stable 24x7 internet for CCTV cameras",
+    "actual_root_cause": "Customer on basic plan, needs reliable upload bandwidth for cameras",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 6,
+    "speed_ratio": 0.8,
+    "latency_ms": 12,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and current plan",
+      "Assess bandwidth needs for CCTV cameras",
+      "Recommend plan with sufficient upload speed",
+      "Suggest wired connection for cameras"
+    ],
+    "tools_used": ["get_customer_profile", "get_plan_details", "search_plans", "check_device_count"],
+    "outcome": "Customer upgraded to Diamond 1499 for reliable camera streaming"
+  },
+  {
+    "scenario_id": "DIAG-048",
+    "customer_complaint": "Speed theek hai lekin internet baar baar 2-3 second ke liye kat jaata hai",
+    "complaint_english": "Speed fine but internet cuts for 2-3 seconds frequently",
+    "actual_root_cause": "Micro-disconnections from unstable DHCP lease renewal",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.85,
+    "latency_ms": 12,
+    "packet_loss_pct": 2,
+    "resolution_steps": [
+      "Run speed test to check packet loss pattern",
+      "Check router health for connection logs",
+      "Check connection status for stability",
+      "Restart router to refresh DHCP",
+      "If persists, log complaint for technician"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "check_router_health", "check_connection_status", "restart_router"],
+    "outcome": "Router restart fixed DHCP issue, micro-disconnections stopped"
+  },
+  {
+    "scenario_id": "DIAG-049",
+    "customer_complaint": "Ghar shift ho raha hu, connection transfer karna hai",
+    "complaint_english": "Moving house, want to transfer connection",
+    "actual_root_cause": "Customer relocation request",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 4,
+    "speed_ratio": 0.9,
+    "latency_ms": 8,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile",
+      "Verify new address serviceability",
+      "Log request for connection transfer",
+      "Provide timeline for disconnection and new installation"
+    ],
+    "tools_used": ["get_customer_profile", "search_plans", "log_complaint"],
+    "outcome": "Transfer request logged, new installation scheduled at new address"
+  },
+  {
+    "scenario_id": "DIAG-050",
+    "customer_complaint": "Titanium plan liya hai lekin 1Gbps speed nahi aa rahi",
+    "complaint_english": "Titanium plan but not getting 1Gbps speed",
+    "actual_root_cause": "Customer testing on WiFi which caps at ~400-500Mbps, needs ethernet for full speed",
+    "cpe_status": "online",
+    "wifi_signal": "good",
+    "connected_devices": 8,
+    "speed_ratio": 0.45,
+    "latency_ms": 5,
+    "packet_loss_pct": 0,
+    "resolution_steps": [
+      "Check customer profile and plan",
+      "Run speed test",
+      "Explain WiFi speed limitations vs ethernet",
+      "Guide customer to test with Cat6 ethernet cable",
+      "Verify gigabit speed on wired connection"
+    ],
+    "tools_used": ["get_customer_profile", "run_speed_test", "get_plan_details", "check_connection_status"],
+    "outcome": "Customer tested on ethernet, achieved 950Mbps, understood WiFi limitation"
+  }
+]

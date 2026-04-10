@@ -1,0 +1,782 @@
+[
+  {
+    "category": "slow_speed",
+    "subcategory": "below_plan_speed",
+    "frequency_rank": 1,
+    "typical_resolution": "Run speed test, check congestion, optimize router placement, escalate to network team if persistent",
+    "avg_resolution_hours": 4,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Internet bahut slow chal raha hai",
+        "Speed bilkul nahi aa rahi plan wali",
+        "Bahut dhima hai net, kuch bhi load nahi hota"
+      ],
+      "en": [
+        "My internet speed is way below what I'm paying for",
+        "Speed test shows only 10Mbps on a 100Mbps plan",
+        "Everything is loading extremely slowly"
+      ],
+      "hinglish": [
+        "Yaar speed bahut slow hai, plan mein 100Mbps hai but 10 bhi nahi aa raha",
+        "Net ki speed ekdum down hai bhai",
+        "Mera internet itna slow hai ki YouTube bhi buffer karta hai"
+      ]
+    }
+  },
+  {
+    "category": "slow_speed",
+    "subcategory": "peak_hour_slowdown",
+    "frequency_rank": 2,
+    "typical_resolution": "Check area congestion, suggest off-peak usage, escalate capacity issue",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": false,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Shaam ko internet bahut slow ho jaata hai",
+        "Raat 8 baje ke baad speed gir jaati hai",
+        "Peak time mein kuch nahi chalta"
+      ],
+      "en": [
+        "Internet slows down terribly in the evening",
+        "Speed drops significantly after 8 PM",
+        "During peak hours the connection is unusable"
+      ],
+      "hinglish": [
+        "Evening mein speed ekdum drop ho jaati hai",
+        "Raat ko net bahut slow ho jaata hai yaar",
+        "Peak hours mein toh internet chalana mushkil hai"
+      ]
+    }
+  },
+  {
+    "category": "no_internet",
+    "subcategory": "complete_outage",
+    "frequency_rank": 3,
+    "typical_resolution": "Check ONT status, verify fiber link, restart router, check area outage, dispatch field team",
+    "avg_resolution_hours": 6,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Internet bilkul nahi chal raha",
+        "Net band hai subah se",
+        "Koi connection hi nahi aa raha"
+      ],
+      "en": [
+        "My internet is completely down",
+        "No connection since this morning",
+        "There is no internet at all"
+      ],
+      "hinglish": [
+        "Bhai net toh bilkul band hai",
+        "Morning se internet nahi chal raha kuch bhi",
+        "Complete outage hai mere ghar pe"
+      ]
+    }
+  },
+  {
+    "category": "no_internet",
+    "subcategory": "intermittent_outage",
+    "frequency_rank": 4,
+    "typical_resolution": "Check signal levels, inspect fiber, replace splitter if needed, monitor for 24h",
+    "avg_resolution_hours": 12,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Internet baar baar kat raha hai",
+        "Kabhi chalta hai kabhi nahi chalta",
+        "Net aata hai phir chala jaata hai"
+      ],
+      "en": [
+        "Internet keeps going on and off",
+        "Connection drops every few minutes",
+        "The internet is intermittent and unreliable"
+      ],
+      "hinglish": [
+        "Net baar baar disconnect ho raha hai bhai",
+        "Kabhi aata hai kabhi jaata hai, bahut frustrating",
+        "Har 10 minute mein internet cut ho jaata hai"
+      ]
+    }
+  },
+  {
+    "category": "frequent_disconnection",
+    "subcategory": "wifi_drops",
+    "frequency_rank": 5,
+    "typical_resolution": "Check WiFi channel congestion, change channel, check interference, update firmware",
+    "avg_resolution_hours": 2,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "WiFi baar baar disconnect hota hai",
+        "Phone ka WiFi kat jaata hai baar baar",
+        "WiFi se device hat jaata hai khud se"
+      ],
+      "en": [
+        "WiFi keeps disconnecting from my devices",
+        "My phone drops WiFi connection frequently",
+        "Devices keep losing WiFi signal"
+      ],
+      "hinglish": [
+        "WiFi baar baar drop ho raha hai devices se",
+        "Mera phone WiFi se disconnect hota rehta hai",
+        "WiFi connection stable nahi rehta yaar"
+      ]
+    }
+  },
+  {
+    "category": "frequent_disconnection",
+    "subcategory": "router_reboots",
+    "frequency_rank": 6,
+    "typical_resolution": "Check router logs, verify power supply, replace router if faulty",
+    "avg_resolution_hours": 8,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Router apne aap restart hota rehta hai",
+        "Router ki light baar baar off hoti hai",
+        "Modem khud se band ho jaata hai"
+      ],
+      "en": [
+        "The router keeps rebooting on its own",
+        "Router lights go off and come back repeatedly",
+        "My modem restarts by itself several times a day"
+      ],
+      "hinglish": [
+        "Router apne aap restart ho jaata hai din mein kai baar",
+        "Modem ki lights baar baar off ho jaati hain",
+        "Router khud se reboot hota rehta hai bhai"
+      ]
+    }
+  },
+  {
+    "category": "wifi_coverage",
+    "subcategory": "dead_zones",
+    "frequency_rank": 7,
+    "typical_resolution": "Assess home layout, suggest mesh extender, reposition router, check antenna orientation",
+    "avg_resolution_hours": 3,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Bedroom mein WiFi nahi aata",
+        "Ghar ke ek kamre mein signal nahi hai",
+        "Kitchen mein WiFi bilkul nahi milta"
+      ],
+      "en": [
+        "WiFi doesn't reach my bedroom",
+        "There's no signal in one room of my house",
+        "I have dead zones where WiFi doesn't work"
+      ],
+      "hinglish": [
+        "Bedroom mein WiFi signal nahi aata bhai",
+        "Mere ghar ke ek room mein bilkul WiFi nahi hai",
+        "Kitchen area mein toh WiFi dead zone hai"
+      ]
+    }
+  },
+  {
+    "category": "wifi_coverage",
+    "subcategory": "weak_signal",
+    "frequency_rank": 8,
+    "typical_resolution": "Check router placement, reduce interference, adjust transmit power, recommend extender",
+    "avg_resolution_hours": 2,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "WiFi ka signal bahut kamzor hai",
+        "Ek baar ki signal strength bahut kam hai",
+        "Signal weak hai poore ghar mein"
+      ],
+      "en": [
+        "WiFi signal is very weak throughout my home",
+        "Signal strength is poor even near the router",
+        "I get only one bar of WiFi in most rooms"
+      ],
+      "hinglish": [
+        "WiFi signal bahut weak hai ghar mein",
+        "Signal strength bahut low show ho rahi hai",
+        "Router ke paas bhi signal achha nahi aata"
+      ]
+    }
+  },
+  {
+    "category": "router_issue",
+    "subcategory": "not_powering_on",
+    "frequency_rank": 9,
+    "typical_resolution": "Check power adapter, verify wall outlet, replace adapter or router",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Router on hi nahi ho raha",
+        "Router ki koi light nahi jal rahi",
+        "Modem start nahi ho raha"
+      ],
+      "en": [
+        "My router is not turning on",
+        "No lights on the router at all",
+        "The router seems completely dead"
+      ],
+      "hinglish": [
+        "Router on nahi ho raha hai bhai",
+        "Koi bhi light nahi jal rahi router pe",
+        "Router dead ho gaya hai lagta hai"
+      ]
+    }
+  },
+  {
+    "category": "router_issue",
+    "subcategory": "overheating",
+    "frequency_rank": 10,
+    "typical_resolution": "Ensure proper ventilation, relocate router, replace if persistent overheating",
+    "avg_resolution_hours": 2,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Router bahut garam ho raha hai",
+        "Modem chhune mein bahut garam lagta hai",
+        "Router overheat ho raha hai"
+      ],
+      "en": [
+        "The router is getting very hot",
+        "My modem is overheating constantly",
+        "Router surface is burning hot to touch"
+      ],
+      "hinglish": [
+        "Router bahut garam ho gaya hai touch karo toh haath jal jaaye",
+        "Modem overheat ho raha hai lagta hai",
+        "Router itna garam hai ki darr lagta hai"
+      ]
+    }
+  },
+  {
+    "category": "billing_issue",
+    "subcategory": "incorrect_charge",
+    "frequency_rank": 11,
+    "typical_resolution": "Review billing history, identify discrepancy, issue credit or correct bill",
+    "avg_resolution_hours": 48,
+    "requires_field_visit": false,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Bill galat aaya hai",
+        "Mujhse zyada paisa charge kiya gaya hai",
+        "Bill mein extra charge lagaya hai"
+      ],
+      "en": [
+        "I've been overcharged on my bill",
+        "My bill amount is incorrect",
+        "There are extra charges on my bill I don't recognize"
+      ],
+      "hinglish": [
+        "Bill mein extra charge lag gaya hai bhai",
+        "Mera bill galat hai, zyada paisa kata hai",
+        "Bill amount wrong show ho raha hai"
+      ]
+    }
+  },
+  {
+    "category": "billing_issue",
+    "subcategory": "payment_not_reflected",
+    "frequency_rank": 12,
+    "typical_resolution": "Verify payment gateway, check transaction status, reconcile with finance team",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": false,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Payment kiya lekin reflect nahi ho raha",
+        "Paisa kat gaya lekin bill paid nahi dikha raha",
+        "Recharge kiya hai lekin update nahi hua"
+      ],
+      "en": [
+        "I made a payment but it's not showing in my account",
+        "Payment was deducted but bill still shows unpaid",
+        "My recent payment hasn't been reflected"
+      ],
+      "hinglish": [
+        "Payment kar diya but reflect nahi ho raha account mein",
+        "Paisa toh kat gaya lekin bill paid nahi dikh raha",
+        "Recharge kiya tha but abhi tak update nahi hua"
+      ]
+    }
+  },
+  {
+    "category": "billing_issue",
+    "subcategory": "refund_request",
+    "frequency_rank": 13,
+    "typical_resolution": "Review service downtime records, calculate prorated refund, process through finance",
+    "avg_resolution_hours": 72,
+    "requires_field_visit": false,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Internet nahi chala toh refund chahiye",
+        "Service nahi mili toh paisa wapas karo",
+        "Downtime ka refund do"
+      ],
+      "en": [
+        "I want a refund for the days internet was not working",
+        "Please refund me for the service outage period",
+        "I expect compensation for the downtime"
+      ],
+      "hinglish": [
+        "Internet nahi chala itne din toh refund toh banta hai",
+        "Downtime ka compensation chahiye mujhe",
+        "Service nahi mili toh paisa wapas karo bhai"
+      ]
+    }
+  },
+  {
+    "category": "installation_delay",
+    "subcategory": "new_connection_pending",
+    "frequency_rank": 14,
+    "typical_resolution": "Check installation queue, coordinate with field team, provide ETA",
+    "avg_resolution_hours": 48,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Installation abhi tak nahi hua",
+        "Connection ke liye apply kiya tha lekin koi aaya nahi",
+        "Kabse wait kar rahe hain installation ka"
+      ],
+      "en": [
+        "My installation is still pending after a week",
+        "No one has come for the connection setup",
+        "When will my JioFiber installation be done"
+      ],
+      "hinglish": [
+        "Installation ka koi update nahi hai bhai",
+        "Apply kiya tha connection ke liye lekin koi nahi aaya abhi tak",
+        "Ek hafta ho gaya installation pending hai"
+      ]
+    }
+  },
+  {
+    "category": "installation_delay",
+    "subcategory": "rescheduled_multiple_times",
+    "frequency_rank": 15,
+    "typical_resolution": "Escalate to installation supervisor, provide priority scheduling, compensate for delay",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Teen baar reschedule ho chuka hai installation",
+        "Har baar naya date de dete hain",
+        "Installation baar baar postpone ho raha hai"
+      ],
+      "en": [
+        "Installation has been rescheduled three times already",
+        "They keep pushing the installation date",
+        "Every time I get a new date but no one shows up"
+      ],
+      "hinglish": [
+        "Installation teen baar reschedule ho chuka hai ab toh had hai",
+        "Baar baar date change kar rahe hain bhai",
+        "Har baar naya date dete hain lekin koi aata nahi"
+      ]
+    }
+  },
+  {
+    "category": "activation_issue",
+    "subcategory": "service_not_activated",
+    "frequency_rank": 16,
+    "typical_resolution": "Verify provisioning status, activate OLT port, sync ONT, test connection",
+    "avg_resolution_hours": 4,
+    "requires_field_visit": false,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Installation ho gaya lekin net shuru nahi hua",
+        "Connection laga diya lekin activate nahi hai",
+        "Router laga hai lekin internet nahi aa raha"
+      ],
+      "en": [
+        "Installation is done but internet is not activated",
+        "My connection was set up but service hasn't started",
+        "Router is installed but I can't connect to internet"
+      ],
+      "hinglish": [
+        "Installation toh ho gaya but net activate nahi hua",
+        "Connection lag gaya hai lekin internet nahi aa raha",
+        "Router toh hai but service start nahi hui"
+      ]
+    }
+  },
+  {
+    "category": "plan_upgrade",
+    "subcategory": "want_higher_speed",
+    "frequency_rank": 17,
+    "typical_resolution": "Explain available plans, process upgrade, update provisioning, verify new speed",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Plan upgrade karna hai",
+        "Zyada speed wala plan chahiye",
+        "Mera plan change karna hai better wala"
+      ],
+      "en": [
+        "I want to upgrade to a faster plan",
+        "Can I switch to a higher speed plan",
+        "What are my upgrade options"
+      ],
+      "hinglish": [
+        "Plan upgrade karna hai bhai zyada speed chahiye",
+        "Koi better plan hai kya faster wala",
+        "Mera plan change karo higher speed mein"
+      ]
+    }
+  },
+  {
+    "category": "plan_downgrade",
+    "subcategory": "reduce_plan",
+    "frequency_rank": 18,
+    "typical_resolution": "Understand reason, offer retention deal, process downgrade if insisted, update provisioning",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Plan chhota karna hai",
+        "Sasta plan chahiye",
+        "Itna speed nahi chahiye, plan kam karo"
+      ],
+      "en": [
+        "I want to downgrade my plan",
+        "Can I switch to a cheaper plan",
+        "I don't need this much speed, reduce my plan"
+      ],
+      "hinglish": [
+        "Plan downgrade karna hai bhai, itna speed nahi chahiye",
+        "Koi sasta plan hai kya switch karna hai",
+        "Plan kam karo yaar budget tight hai"
+      ]
+    }
+  },
+  {
+    "category": "cancellation",
+    "subcategory": "want_to_cancel",
+    "frequency_rank": 19,
+    "typical_resolution": "Understand reason, offer retention deal, process cancellation if insisted, arrange equipment pickup",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Connection cancel karna hai",
+        "Service band karna hai",
+        "Jio Fiber nahi chahiye ab"
+      ],
+      "en": [
+        "I want to cancel my JioFiber connection",
+        "Please disconnect my service",
+        "I want to terminate my broadband"
+      ],
+      "hinglish": [
+        "Connection cancel karna hai bhai",
+        "Service band karo yaar bahut problems hain",
+        "Jio Fiber nahi chahiye ab disconnect karo"
+      ]
+    }
+  },
+  {
+    "category": "streaming_issues",
+    "subcategory": "buffering",
+    "frequency_rank": 20,
+    "typical_resolution": "Check speed, test streaming server connectivity, clear DNS cache, suggest wired connection",
+    "avg_resolution_hours": 2,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Netflix bahut buffer karta hai",
+        "Video streaming mein bahut buffering hoti hai",
+        "Hotstar pe kuch dekhna mushkil hai buffering ki wajah se"
+      ],
+      "en": [
+        "Netflix keeps buffering even though I have a fast plan",
+        "Video streaming is constantly interrupted",
+        "Can't watch anything without buffering issues"
+      ],
+      "hinglish": [
+        "Netflix pe bahut buffering hoti hai yaar",
+        "Streaming karte time video ruk ruk ke chalta hai",
+        "Hotstar pe match dekhna impossible hai buffering ki wajah se"
+      ]
+    }
+  },
+  {
+    "category": "gaming_issues",
+    "subcategory": "high_latency",
+    "frequency_rank": 21,
+    "typical_resolution": "Check ping to gaming servers, optimize QoS settings, suggest wired connection, check for packet loss",
+    "avg_resolution_hours": 3,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Game mein bahut lag aa raha hai",
+        "Ping bahut high hai gaming mein",
+        "Online game khelna mushkil hai lag ki wajah se"
+      ],
+      "en": [
+        "I'm experiencing high ping while gaming",
+        "Latency is terrible for online games",
+        "Game lag is making it impossible to play"
+      ],
+      "hinglish": [
+        "Gaming mein bahut lag aa raha hai bhai ping 200+ hai",
+        "PUBG khelne mein bahut latency aa rahi hai",
+        "Online games mein ping bahut high hai fix karo"
+      ]
+    }
+  },
+  {
+    "category": "dns_issue",
+    "subcategory": "websites_not_loading",
+    "frequency_rank": 22,
+    "typical_resolution": "Flush DNS cache, change to public DNS, verify DNS resolution, check for ISP-level blocks",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Kuch websites nahi khul rahi",
+        "Google toh chalta hai lekin baaki sites nahi",
+        "Website open nahi ho rahi hai"
+      ],
+      "en": [
+        "Some websites are not loading",
+        "Google works but other sites don't open",
+        "I can't access certain websites"
+      ],
+      "hinglish": [
+        "Kuch websites open nahi ho rahi bhai",
+        "Google chal raha hai but baaki sites nahi khul rahi",
+        "Specific websites load nahi ho rahi internet hone ke baad bhi"
+      ]
+    }
+  },
+  {
+    "category": "device_connectivity",
+    "subcategory": "device_cant_connect",
+    "frequency_rank": 23,
+    "typical_resolution": "Check device WiFi settings, forget and reconnect, verify MAC filtering, check DHCP pool",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Naya phone WiFi se connect nahi ho raha",
+        "Laptop WiFi se nahi jud raha",
+        "Smart TV mein internet nahi aa raha"
+      ],
+      "en": [
+        "My new phone can't connect to WiFi",
+        "Laptop won't connect to the network",
+        "Smart TV is not getting internet"
+      ],
+      "hinglish": [
+        "Naya phone WiFi se connect nahi ho raha hai bhai",
+        "Laptop WiFi se nahi jud raha troubleshoot karo",
+        "Smart TV pe internet nahi aa raha hai"
+      ]
+    }
+  },
+  {
+    "category": "device_connectivity",
+    "subcategory": "too_many_devices",
+    "frequency_rank": 24,
+    "typical_resolution": "Check connected device count, remove unused devices, suggest plan upgrade for more devices",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Bahut saare devices hain toh speed kam ho gayi",
+        "Kitne devices connect kar sakte hain",
+        "Naya device connect karne pe purane disconnect ho jaate hain"
+      ],
+      "en": [
+        "Too many devices are slowing down my internet",
+        "How many devices can I connect at once",
+        "New devices kick off old ones from the network"
+      ],
+      "hinglish": [
+        "Bahut saare devices connect hain toh speed slow ho gayi hai",
+        "Kitne devices support karta hai mera plan",
+        "Jab naya device connect karta hoon toh purane hat jaate hain"
+      ]
+    }
+  },
+  {
+    "category": "password_issue",
+    "subcategory": "forgot_wifi_password",
+    "frequency_rank": 25,
+    "typical_resolution": "Guide to check router admin panel, reset WiFi password via app or router interface",
+    "avg_resolution_hours": 0.5,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "WiFi ka password bhool gaya",
+        "Password kya hai WiFi ka",
+        "WiFi password change karna hai"
+      ],
+      "en": [
+        "I forgot my WiFi password",
+        "What is my WiFi password",
+        "I need to reset my WiFi password"
+      ],
+      "hinglish": [
+        "WiFi password bhool gaya hai bhai kaise pata karu",
+        "WiFi ka password kya tha yaad nahi aa raha",
+        "Password reset karna hai WiFi ka"
+      ]
+    }
+  },
+  {
+    "category": "data_limit",
+    "subcategory": "data_exhausted",
+    "frequency_rank": 26,
+    "typical_resolution": "Check data usage, explain FUP policy, suggest plan upgrade, add data booster",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Data khatam ho gaya hai",
+        "Speed bahut slow ho gayi hai data khatam hone ke baad",
+        "FUP limit lag gayi hai"
+      ],
+      "en": [
+        "My data limit has been reached",
+        "Speed reduced after data exhaustion",
+        "I've hit my FUP limit"
+      ],
+      "hinglish": [
+        "Data khatam ho gaya hai speed ekdum slow ho gayi",
+        "FUP limit lag gayi hai bhai kuch karo",
+        "Monthly data exhaust ho gaya hai speed gir gayi"
+      ]
+    }
+  },
+  {
+    "category": "fiber_damage",
+    "subcategory": "cable_cut",
+    "frequency_rank": 27,
+    "typical_resolution": "Dispatch field technician, repair or replace fiber cable, test signal levels",
+    "avg_resolution_hours": 24,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Fiber cable kat gayi hai",
+        "Wire toot gayi hai bahar",
+        "Cable damage ho gayi hai construction mein"
+      ],
+      "en": [
+        "The fiber cable has been cut outside my home",
+        "Construction work damaged my fiber cable",
+        "The wire is broken near the junction box"
+      ],
+      "hinglish": [
+        "Fiber cable kat gayi hai bhai bahar construction chal raha tha",
+        "Wire toot gayi hai kisi ne kaat di lagta hai",
+        "Cable damage ho gayi hai isliye net nahi aa raha"
+      ]
+    }
+  },
+  {
+    "category": "ont_issue",
+    "subcategory": "red_light_on_ont",
+    "frequency_rank": 28,
+    "typical_resolution": "Check fiber connection to ONT, inspect fiber bend, clean fiber connector, replace ONT if faulty",
+    "avg_resolution_hours": 8,
+    "requires_field_visit": true,
+    "self_service_possible": false,
+    "customer_language_examples": {
+      "hi": [
+        "Router pe red light aa rahi hai",
+        "ONT pe lal batti jal rahi hai",
+        "Modem pe LOS ki red light hai"
+      ],
+      "en": [
+        "There's a red light on my ONT device",
+        "The LOS indicator is showing red",
+        "Red light is blinking on the modem"
+      ],
+      "hinglish": [
+        "Router pe red light aa rahi hai bhai kya karu",
+        "ONT pe lal light jal rahi hai LOS wali",
+        "Modem pe red light blink ho rahi hai"
+      ]
+    }
+  },
+  {
+    "category": "vpn_issue",
+    "subcategory": "vpn_not_working",
+    "frequency_rank": 29,
+    "typical_resolution": "Check port blocking, suggest protocol change, verify ISP-level restrictions, recommend alternative VPN settings",
+    "avg_resolution_hours": 2,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "VPN nahi chal raha hai",
+        "Office ka VPN connect nahi ho raha",
+        "VPN se kaam nahi ho pa raha"
+      ],
+      "en": [
+        "My VPN is not working on JioFiber",
+        "Can't connect to office VPN",
+        "VPN keeps disconnecting"
+      ],
+      "hinglish": [
+        "VPN connect nahi ho raha hai office wala",
+        "Jio pe VPN nahi chalta kya bhai",
+        "Work from home ke liye VPN chahiye but connect nahi hota"
+      ]
+    }
+  },
+  {
+    "category": "security_concern",
+    "subcategory": "unauthorized_devices",
+    "frequency_rank": 30,
+    "typical_resolution": "Check connected devices list, change WiFi password, enable MAC filtering, set up guest network",
+    "avg_resolution_hours": 1,
+    "requires_field_visit": false,
+    "self_service_possible": true,
+    "customer_language_examples": {
+      "hi": [
+        "Koi aur mera WiFi use kar raha hai",
+        "Unknown device connected dikh raha hai",
+        "WiFi chori ho raha hai"
+      ],
+      "en": [
+        "Someone else is using my WiFi",
+        "I see unknown devices on my network",
+        "My WiFi might be hacked"
+      ],
+      "hinglish": [
+        "Koi aur mera WiFi use kar raha hai lagta hai",
+        "Unknown devices dikh rahe hain network pe",
+        "WiFi hack ho gaya hai kya koi aur bhi connect hai"
+      ]
+    }
+  }
+]

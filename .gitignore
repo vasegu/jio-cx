@@ -8,3 +8,8 @@ dist/
 !.env.example
 !.env.local.example
 .vercel
+.venv/
+.adk/
+__pycache__/
+*.pyc
+assets.zip

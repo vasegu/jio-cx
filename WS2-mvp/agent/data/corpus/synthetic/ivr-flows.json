@@ -1,0 +1,473 @@
+[
+  {
+    "flow_id": "IVR-001",
+    "trigger_intent": "no_internet",
+    "trigger_phrases": [
+      "internet nahi chal raha",
+      "net band hai",
+      "no internet",
+      "internet down hai",
+      "connection nahi aa raha",
+      "internet not working",
+      "net nahi chal raha bhai"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Retrieve customer profile and plan details",
+        "agent_says_en": "Let me pull up your account details.",
+        "agent_says_hi": "Main aapka account details dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_connection_status",
+        "description": "Check if connection is online or offline",
+        "agent_says_en": "I'm checking your connection status now.",
+        "agent_says_hi": "Main aapka connection status check kar raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "check_router_health",
+        "description": "Verify router and ONT health",
+        "agent_says_en": "Let me check your router health.",
+        "agent_says_hi": "Router ki health check karta hoon."
+      },
+      {
+        "step": 4,
+        "action": "restart_router",
+        "description": "Attempt remote router restart if router is online but connection is down",
+        "agent_says_en": "I'll try restarting your router remotely.",
+        "agent_says_hi": "Main router ko remotely restart karne ki koshish karta hoon."
+      },
+      {
+        "step": 5,
+        "action": "log_complaint",
+        "description": "If restart doesn't resolve, log complaint for field visit",
+        "agent_says_en": "I've logged a complaint and a technician will visit within 24 hours.",
+        "agent_says_hi": "Complaint register kar di hai, technician 24 ghante mein aayega."
+      }
+    ],
+    "escalation_criteria": "Router offline, fiber signal lost, area outage confirmed",
+    "typical_duration_minutes": 8
+  },
+  {
+    "flow_id": "IVR-002",
+    "trigger_intent": "slow_speed",
+    "trigger_phrases": [
+      "speed slow hai",
+      "internet slow chal raha hai",
+      "speed nahi aa rahi",
+      "slow internet",
+      "speed kam hai",
+      "bahut dhima hai net",
+      "speed test mein kam aa raha hai"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer plan to know expected speed",
+        "agent_says_en": "Let me check your account and plan details.",
+        "agent_says_hi": "Aapka account aur plan details dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "run_speed_test",
+        "description": "Run remote speed test to measure actual throughput",
+        "agent_says_en": "Running a speed test on your connection now.",
+        "agent_says_hi": "Aapke connection pe speed test chala raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "check_device_count",
+        "description": "Check how many devices are consuming bandwidth",
+        "agent_says_en": "Let me check how many devices are connected.",
+        "agent_says_hi": "Dekhta hoon kitne devices connected hain."
+      },
+      {
+        "step": 4,
+        "action": "check_router_health",
+        "description": "Check router for firmware issues or overheating",
+        "agent_says_en": "Checking your router health and settings.",
+        "agent_says_hi": "Router ki health aur settings check kar raha hoon."
+      },
+      {
+        "step": 5,
+        "action": "search_plans",
+        "description": "If plan is insufficient for usage, suggest upgrade",
+        "agent_says_en": "Based on your usage, let me show you some better plan options.",
+        "agent_says_hi": "Aapke usage ke hisaab se kuch achhe plan options dikhata hoon."
+      }
+    ],
+    "escalation_criteria": "Speed below 50% of plan after router restart, persistent issue across multiple tests",
+    "typical_duration_minutes": 10
+  },
+  {
+    "flow_id": "IVR-003",
+    "trigger_intent": "wifi_issue",
+    "trigger_phrases": [
+      "wifi nahi chal raha",
+      "wifi disconnect ho raha hai",
+      "wifi signal nahi aa raha",
+      "wifi weak hai",
+      "wifi not working",
+      "wifi drop ho raha hai",
+      "bedroom mein wifi nahi aata"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer and plan details",
+        "agent_says_en": "Let me access your account.",
+        "agent_says_hi": "Aapka account access karta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_router_health",
+        "description": "Check WiFi signal strength and channel",
+        "agent_says_en": "Checking your WiFi signal and router settings.",
+        "agent_says_hi": "WiFi signal aur router settings check kar raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "check_device_count",
+        "description": "Check if too many devices are on WiFi",
+        "agent_says_en": "Let me see how many devices are on your WiFi.",
+        "agent_says_hi": "Dekhta hoon WiFi pe kitne devices hain."
+      },
+      {
+        "step": 4,
+        "action": "restart_router",
+        "description": "Restart router to refresh WiFi channels",
+        "agent_says_en": "I'll restart your router to refresh the WiFi configuration.",
+        "agent_says_hi": "Router restart karta hoon WiFi configuration refresh karne ke liye."
+      },
+      {
+        "step": 5,
+        "action": "log_complaint",
+        "description": "If WiFi coverage issue persists, log for mesh extender assessment",
+        "agent_says_en": "I've logged a request - we may recommend a WiFi extender for your home.",
+        "agent_says_hi": "Request log kar di hai - aapke ghar ke liye WiFi extender recommend kar sakte hain."
+      }
+    ],
+    "escalation_criteria": "Persistent WiFi drops after channel change, coverage dead zones requiring mesh extender",
+    "typical_duration_minutes": 7
+  },
+  {
+    "flow_id": "IVR-004",
+    "trigger_intent": "billing_query",
+    "trigger_phrases": [
+      "bill ke baare mein",
+      "bill galat hai",
+      "billing issue",
+      "bill zyada aaya",
+      "payment nahi dikha raha",
+      "refund chahiye",
+      "bill mein extra charge hai"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer profile with billing details",
+        "agent_says_en": "Let me pull up your account and billing history.",
+        "agent_says_hi": "Aapka account aur billing history dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "get_plan_details",
+        "description": "Get current plan pricing for comparison",
+        "agent_says_en": "Checking your current plan details and charges.",
+        "agent_says_hi": "Aapke current plan ki details aur charges check kar raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "log_complaint",
+        "description": "Log billing complaint for finance team review",
+        "agent_says_en": "I've raised a billing complaint - our finance team will review within 48 hours.",
+        "agent_says_hi": "Billing complaint raise kar di hai - finance team 48 ghante mein review karegi."
+      }
+    ],
+    "escalation_criteria": "Duplicate charges, refund requests over 1000 INR, recurring billing errors",
+    "typical_duration_minutes": 6
+  },
+  {
+    "flow_id": "IVR-005",
+    "trigger_intent": "plan_change",
+    "trigger_phrases": [
+      "plan change karna hai",
+      "upgrade karna hai",
+      "downgrade karna hai",
+      "plan badalna hai",
+      "zyada speed chahiye",
+      "sasta plan chahiye",
+      "want to change my plan"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get current plan details",
+        "agent_says_en": "Let me check your current plan first.",
+        "agent_says_hi": "Pehle aapka current plan dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "get_plan_details",
+        "description": "Show details of current plan",
+        "agent_says_en": "Here are your current plan details.",
+        "agent_says_hi": "Yeh rahi aapke current plan ki details."
+      },
+      {
+        "step": 3,
+        "action": "search_plans",
+        "description": "Search and show available plan options",
+        "agent_says_en": "Here are the available plans you can switch to.",
+        "agent_says_hi": "Yeh hain available plans jinmein switch kar sakte hain."
+      },
+      {
+        "step": 4,
+        "action": "get_plan_details",
+        "description": "Get details of customer's chosen plan",
+        "agent_says_en": "Let me show you the full details of that plan.",
+        "agent_says_hi": "Is plan ki poori details dikhata hoon."
+      }
+    ],
+    "escalation_criteria": "Downgrade requests from high-value customers, cancellation threats during downgrade",
+    "typical_duration_minutes": 5
+  },
+  {
+    "flow_id": "IVR-006",
+    "trigger_intent": "router_problem",
+    "trigger_phrases": [
+      "router problem hai",
+      "router on nahi ho raha",
+      "router restart ho raha hai",
+      "red light on router",
+      "router garam ho raha hai",
+      "router not working",
+      "modem kharab hai"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer details",
+        "agent_says_en": "Let me access your account details.",
+        "agent_says_hi": "Aapka account details access karta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_router_health",
+        "description": "Run comprehensive router diagnostics",
+        "agent_says_en": "Running diagnostics on your router now.",
+        "agent_says_hi": "Router pe diagnostics chala raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "check_connection_status",
+        "description": "Check if the connection itself is fine",
+        "agent_says_en": "Checking your connection status as well.",
+        "agent_says_hi": "Connection status bhi check kar raha hoon."
+      },
+      {
+        "step": 4,
+        "action": "restart_router",
+        "description": "Attempt router restart if possible",
+        "agent_says_en": "I'll try to restart the router.",
+        "agent_says_hi": "Router restart karne ki koshish karta hoon."
+      },
+      {
+        "step": 5,
+        "action": "log_complaint",
+        "description": "If hardware issue, log for router replacement",
+        "agent_says_en": "I've logged a complaint for router replacement - a technician will visit you.",
+        "agent_says_hi": "Router replacement ke liye complaint log kar di - technician aayega aapke paas."
+      }
+    ],
+    "escalation_criteria": "Router not powering on, persistent red LOS light, repeated auto-reboots",
+    "typical_duration_minutes": 8
+  },
+  {
+    "flow_id": "IVR-007",
+    "trigger_intent": "new_connection",
+    "trigger_phrases": [
+      "naya connection chahiye",
+      "JioFiber lagwana hai",
+      "new connection",
+      "internet connection lena hai",
+      "AirFiber lagwana hai",
+      "broadband lena hai",
+      "fiber install karna hai"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "search_plans",
+        "description": "Show available plans for the customer",
+        "agent_says_en": "Here are our available JioFiber plans.",
+        "agent_says_hi": "Yeh hain hamare available JioFiber plans."
+      },
+      {
+        "step": 2,
+        "action": "get_plan_details",
+        "description": "Get details of plan customer is interested in",
+        "agent_says_en": "Let me give you the full details of this plan.",
+        "agent_says_hi": "Is plan ki poori details deta hoon."
+      },
+      {
+        "step": 3,
+        "action": "get_plan_details",
+        "description": "Compare with alternative plans if customer asks",
+        "agent_says_en": "Here's how it compares with other plans.",
+        "agent_says_hi": "Doosre plans ke saath compare karein."
+      }
+    ],
+    "escalation_criteria": "Area not serviceable, customer requesting special installation arrangements",
+    "typical_duration_minutes": 7
+  },
+  {
+    "flow_id": "IVR-008",
+    "trigger_intent": "complaint_status",
+    "trigger_phrases": [
+      "complaint ka status",
+      "meri complaint ka kya hua",
+      "complaint update",
+      "complaint check karna hai",
+      "koi update nahi diya",
+      "what happened to my complaint",
+      "complaint follow up"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer details to find complaints",
+        "agent_says_en": "Let me look up your account.",
+        "agent_says_hi": "Aapka account dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_complaint_status",
+        "description": "Check status of existing complaints",
+        "agent_says_en": "Checking the status of your complaint now.",
+        "agent_says_hi": "Aapki complaint ka status check kar raha hoon."
+      },
+      {
+        "step": 3,
+        "action": "log_complaint",
+        "description": "If unresolved beyond SLA, escalate with new complaint",
+        "agent_says_en": "I've escalated this with a priority flag. You'll get an update within 4 hours.",
+        "agent_says_hi": "Priority flag ke saath escalate kar diya hai. 4 ghante mein update milega."
+      }
+    ],
+    "escalation_criteria": "Complaint open beyond 48 hours, customer called more than twice about same issue",
+    "typical_duration_minutes": 5
+  },
+  {
+    "flow_id": "IVR-009",
+    "trigger_intent": "cancellation",
+    "trigger_phrases": [
+      "connection cancel karna hai",
+      "service band karo",
+      "cancel my connection",
+      "disconnect karna hai",
+      "Jio Fiber nahi chahiye",
+      "connection katwa do",
+      "want to cancel"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer details and history",
+        "agent_says_en": "Let me pull up your account details.",
+        "agent_says_hi": "Aapka account details dekhta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_complaint_status",
+        "description": "Check if cancellation is due to unresolved issues",
+        "agent_says_en": "I see you've had some issues. Let me check if those are resolved.",
+        "agent_says_hi": "Aapko kuch issues aaye the. Check karta hoon woh resolve hue ya nahi."
+      },
+      {
+        "step": 3,
+        "action": "check_connection_status",
+        "description": "Verify current service quality",
+        "agent_says_en": "Let me check your current connection quality.",
+        "agent_says_hi": "Aapki current connection quality check karta hoon."
+      },
+      {
+        "step": 4,
+        "action": "search_plans",
+        "description": "Offer alternative plan or retention deal",
+        "agent_says_en": "Before canceling, may I suggest a plan that might better suit your needs?",
+        "agent_says_hi": "Cancel karne se pehle, kya main koi aisa plan suggest karun jo aapke liye better ho?"
+      },
+      {
+        "step": 5,
+        "action": "log_complaint",
+        "description": "If insisted, process cancellation request",
+        "agent_says_en": "I've processed your cancellation request. A team will contact you for equipment pickup.",
+        "agent_says_hi": "Cancellation request process kar di hai. Equipment pickup ke liye team contact karegi."
+      }
+    ],
+    "escalation_criteria": "High-value customer (Platinum/Titanium), customer with tenure over 60 days, multiple past complaints",
+    "typical_duration_minutes": 12
+  },
+  {
+    "flow_id": "IVR-010",
+    "trigger_intent": "device_connectivity",
+    "trigger_phrases": [
+      "device connect nahi ho raha",
+      "naya device WiFi se nahi jud raha",
+      "TV pe internet nahi",
+      "laptop connect nahi ho raha",
+      "printer WiFi se nahi connect ho raha",
+      "can't connect my device",
+      "device internet nahi le raha"
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "action": "get_customer_profile",
+        "description": "Get customer account details",
+        "agent_says_en": "Let me access your account.",
+        "agent_says_hi": "Aapka account access karta hoon."
+      },
+      {
+        "step": 2,
+        "action": "check_connection_status",
+        "description": "Verify overall connection is working",
+        "agent_says_en": "First, let me verify your connection is active.",
+        "agent_says_hi": "Pehle check karta hoon ki connection active hai."
+      },
+      {
+        "step": 3,
+        "action": "check_device_count",
+        "description": "Check if device limit or DHCP pool is exhausted",
+        "agent_says_en": "Checking how many devices are currently connected.",
+        "agent_says_hi": "Dekh raha hoon abhi kitne devices connected hain."
+      },
+      {
+        "step": 4,
+        "action": "check_router_health",
+        "description": "Check router DHCP and band settings",
+        "agent_says_en": "Checking your router settings for device compatibility.",
+        "agent_says_hi": "Router ki settings check kar raha hoon device compatibility ke liye."
+      },
+      {
+        "step": 5,
+        "action": "restart_router",
+        "description": "Restart router to refresh connections and DHCP",
+        "agent_says_en": "I'll restart the router to refresh the connection pool. Try connecting your device after 2 minutes.",
+        "agent_says_hi": "Router restart karta hoon connection pool refresh karne ke liye. 2 minute baad device connect karne ki koshish karein."
+      }
+    ],
+    "escalation_criteria": "Multiple devices unable to connect, persistent DHCP failures after restart",
+    "typical_duration_minutes": 7
+  }
+]

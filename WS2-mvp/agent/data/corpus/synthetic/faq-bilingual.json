@@ -1,0 +1,452 @@
+[
+  {
+    "id": "FAQ-001",
+    "category": "plans",
+    "question_en": "What plans does JioFiber offer?",
+    "question_hi": "JioFiber mein kaunse plan milte hain?",
+    "question_hinglish": "JioFiber ke plans kya kya hain?",
+    "answer_en": "JioFiber offers several plans: Silver 599 (30Mbps), Gold 999 (100Mbps), Diamond 1499 (150Mbps), Platinum 2499 (300Mbps), and Titanium 3999 (1Gbps). We also have AirFiber 599 (30Mbps) and AirFiber 999 (100Mbps) for wireless fiber delivery.",
+    "answer_hi": "JioFiber mein kaafi plans hain: Silver 599 (30Mbps), Gold 999 (100Mbps), Diamond 1499 (150Mbps), Platinum 2499 (300Mbps), aur Titanium 3999 (1Gbps). AirFiber bhi hai - AirFiber 599 (30Mbps) aur AirFiber 999 (100Mbps) wireless fiber ke liye."
+  },
+  {
+    "id": "FAQ-002",
+    "category": "plans",
+    "question_en": "Which plan is best for a family of 4-5 people?",
+    "question_hi": "4-5 logon ke parivaar ke liye kaunsa plan achha rahega?",
+    "question_hinglish": "Family mein 4-5 log hain, kaunsa plan lein?",
+    "answer_en": "For a family of 4-5 with multiple devices, we recommend Gold 999 (100Mbps) for regular use or Diamond 1499 (150Mbps) if you stream a lot of HD content. If everyone works or studies from home, Platinum 2499 (300Mbps) would be ideal.",
+    "answer_hi": "4-5 logon ke liye Gold 999 (100Mbps) achha rahega agar normal use hai. Agar bahut streaming aur HD content dekhte hain toh Diamond 1499 (150Mbps) le lein. Agar sabko work from home ya online padhai karni hai toh Platinum 2499 (300Mbps) best rahega."
+  },
+  {
+    "id": "FAQ-003",
+    "category": "plans",
+    "question_en": "What is the difference between JioFiber and AirFiber?",
+    "question_hi": "JioFiber aur AirFiber mein kya fark hai?",
+    "question_hinglish": "JioFiber aur AirFiber mein difference kya hai?",
+    "answer_en": "JioFiber uses a physical fiber optic cable to your home for the most stable connection. AirFiber delivers internet wirelessly through a fixed wireless antenna, so no cable installation is needed. AirFiber is great for areas where fiber cable laying is difficult.",
+    "answer_hi": "JioFiber mein ghar tak fiber optic cable aati hai, yeh sabse stable connection hota hai. AirFiber mein wireless antenna se internet milta hai, cable lagane ki zaroorat nahi hoti. Jahan fiber cable lagana mushkil ho wahan AirFiber bahut achha option hai."
+  },
+  {
+    "id": "FAQ-004",
+    "category": "speed",
+    "question_en": "Why is my internet speed slower than what my plan promises?",
+    "question_hi": "Mera internet plan ki speed se kam kyun chal raha hai?",
+    "question_hinglish": "Speed plan se kam kyun aa rahi hai?",
+    "answer_en": "Several factors can affect speed: number of connected devices sharing bandwidth, WiFi vs wired connection (WiFi is always slower), router placement, wall interference, and peak usage hours. Try testing with an ethernet cable directly connected to the router for the most accurate result.",
+    "answer_hi": "Speed kam hone ke kaafi reasons ho sakte hain: kitne devices connected hain, WiFi pe test kar rahe hain ya cable se (WiFi mein speed hamesha kam aati hai), router ki jagah, diwaron ki wajah se signal weak hona, aur peak hours. Sabse sahi speed dekhne ke liye ethernet cable se direct router se connect karke test karein."
+  },
+  {
+    "id": "FAQ-005",
+    "category": "speed",
+    "question_en": "How do I check my current internet speed?",
+    "question_hi": "Apni internet speed kaise check karein?",
+    "question_hinglish": "Speed kaise check karein apni?",
+    "answer_en": "You can check your speed through the MyJio app, visit speedtest.net from any browser, or call our support and we'll run a speed test remotely. For the most accurate result, connect your laptop to the router with an ethernet cable and close other apps.",
+    "answer_hi": "Speed check karne ke liye MyJio app use karein, ya browser mein speedtest.net kholein, ya hamare support ko call karein hum remotely speed test kar denge. Sabse sahi result ke liye laptop ko ethernet cable se router se connect karein aur baaki apps band kar dein."
+  },
+  {
+    "id": "FAQ-006",
+    "category": "speed",
+    "question_en": "What speed do I need for 4K streaming?",
+    "question_hi": "4K streaming ke liye kitni speed chahiye?",
+    "question_hinglish": "4K video dekhne ke liye kitni speed lagti hai?",
+    "answer_en": "4K streaming needs at least 25Mbps per stream. If you have multiple TVs or devices streaming simultaneously, multiply accordingly. We recommend Gold 999 (100Mbps) for homes with regular 4K streaming on 2-3 devices.",
+    "answer_hi": "4K streaming ke liye kam se kam 25Mbps chahiye ek stream ke liye. Agar ek se zyada TV ya device pe ek saath stream karna hai toh aur zyada chahiye. Hum Gold 999 (100Mbps) recommend karte hain agar ghar mein 2-3 devices pe 4K dekhte hain."
+  },
+  {
+    "id": "FAQ-007",
+    "category": "router",
+    "question_en": "How do I restart my router?",
+    "question_hi": "Router restart kaise karein?",
+    "question_hinglish": "Router restart kaise karna hai?",
+    "answer_en": "Unplug the power cable from the router, wait 30 seconds, then plug it back in. Wait 2-3 minutes for the router to fully boot up. All lights should turn green. You can also restart from the MyJio app under device settings.",
+    "answer_hi": "Router ka power cable nikaal dein, 30 second ruk jaayein, phir wapas lagaa dein. 2-3 minute tak wait karein jab tak router poora start na ho jaaye. Saari lights green honi chahiye. MyJio app se bhi restart kar sakte hain device settings mein jaake."
+  },
+  {
+    "id": "FAQ-008",
+    "category": "router",
+    "question_en": "What do the different lights on my router mean?",
+    "question_hi": "Router pe alag alag lights ka kya matlab hai?",
+    "question_hinglish": "Router ki lights ka kya matlab hota hai?",
+    "answer_en": "Green steady light means everything is normal. Green blinking means data transfer is happening (that's fine). Red light on LOS means fiber signal is lost - check if the fiber cable is properly connected. Red on Power means hardware issue - contact support.",
+    "answer_hi": "Green steady light ka matlab sab theek hai. Green blinking ka matlab data transfer ho raha hai (yeh normal hai). LOS pe red light ka matlab fiber signal nahi aa raha - check karein ki fiber cable sahi se lagi hai. Power pe red light ka matlab hardware problem hai - support se baat karein."
+  },
+  {
+    "id": "FAQ-009",
+    "category": "router",
+    "question_en": "How do I change my WiFi password?",
+    "question_hi": "WiFi ka password kaise change karein?",
+    "question_hinglish": "WiFi password change karna hai kaise karein?",
+    "answer_en": "Open a browser and go to 192.168.1.1. Login with admin credentials (default is usually admin/admin or printed on the router sticker). Go to WiFi settings, find the password field, enter your new password, and save. All devices will need to reconnect with the new password.",
+    "answer_hi": "Browser kholein aur 192.168.1.1 pe jaayein. Admin credentials se login karein (default usually admin/admin hota hai ya router ke sticker pe likha hota hai). WiFi settings mein jaayein, password field dhundhein, naya password daalein aur save karein. Sab devices ko naye password se dubara connect karna padega."
+  },
+  {
+    "id": "FAQ-010",
+    "category": "router",
+    "question_en": "Where should I place my router for best WiFi coverage?",
+    "question_hi": "Router kahan rakhein toh sabse achha WiFi aaye?",
+    "question_hinglish": "Router ki best position kya hai WiFi ke liye?",
+    "answer_en": "Place the router in a central location in your home, elevated on a shelf or table. Keep it away from walls, metal objects, microwaves, and other electronics. Don't put it inside a cabinet or behind the TV. The more open the space around it, the better the coverage.",
+    "answer_hi": "Router ko ghar ke beech mein rakhein, kisi shelf ya table pe upar rakhein. Diwaron se door rakhein, metal ki cheezon se door, microwave se door, aur doosre electronics se door. Almari ke andar ya TV ke peeche mat rakhein. Jitni khuli jagah hogi utna achha signal aayega."
+  },
+  {
+    "id": "FAQ-011",
+    "category": "billing",
+    "question_en": "How do I pay my JioFiber bill?",
+    "question_hi": "JioFiber ka bill kaise bhare?",
+    "question_hinglish": "Bill kaise pay karein JioFiber ka?",
+    "answer_en": "You can pay through the MyJio app, Jio.com website, auto-pay via bank account or credit card, UPI apps like Google Pay or PhonePe, or at any Jio Store. Auto-pay is the most convenient to avoid missing due dates.",
+    "answer_hi": "Bill pay karne ke kai tarike hain: MyJio app se, Jio.com website se, auto-pay bank account ya credit card se, UPI apps jaise Google Pay ya PhonePe se, ya kisi bhi Jio Store pe. Auto-pay sabse achha hai taaki due date miss na ho."
+  },
+  {
+    "id": "FAQ-012",
+    "category": "billing",
+    "question_en": "My bill seems higher than expected, why?",
+    "question_hi": "Mera bill zyada kyun aaya hai?",
+    "question_hinglish": "Bill expected se zyada kyun hai?",
+    "answer_en": "Higher bills can be due to: first bill including installation charges, plan upgrade charges, GST additions, late payment fees, or add-on services. Check your bill breakdown in the MyJio app under billing section for detailed charges.",
+    "answer_hi": "Bill zyada hone ke reasons ho sakte hain: pehle bill mein installation charge, plan upgrade ka charge, GST, late payment fee, ya koi add-on service. MyJio app mein billing section mein jaake bill ka pura breakdown dekh sakte hain."
+  },
+  {
+    "id": "FAQ-013",
+    "category": "billing",
+    "question_en": "Can I get a refund for days when internet was not working?",
+    "question_hi": "Jitne din internet nahi chala uska refund milega?",
+    "question_hinglish": "Internet nahi chala toh refund milega kya?",
+    "answer_en": "Yes, if there was a verified service outage that was not resolved within the SLA timeframe, you can request a prorated refund for the downtime period. Contact our support with your complaint reference number and we'll process the refund.",
+    "answer_hi": "Haan, agar verified service outage tha aur SLA time mein solve nahi hua, toh aap downtime ke hisaab se prorated refund ke liye request kar sakte hain. Hamare support se apna complaint reference number ke saath baat karein, hum refund process kar denge."
+  },
+  {
+    "id": "FAQ-014",
+    "category": "installation",
+    "question_en": "How long does JioFiber installation take?",
+    "question_hi": "JioFiber lagane mein kitna time lagta hai?",
+    "question_hinglish": "JioFiber installation mein kitna time lagta hai?",
+    "answer_en": "After you place an order, installation is usually scheduled within 3-5 working days depending on your area. The actual installation takes about 2-3 hours. Our technician will set up the ONT, router, and test the connection before leaving.",
+    "answer_hi": "Order dene ke baad installation usually 3-5 working days mein schedule hota hai, area pe depend karta hai. Installation mein lagbhag 2-3 ghante lagte hain. Hamare technician ONT, router set up karenge aur jaane se pehle connection test karenge."
+  },
+  {
+    "id": "FAQ-015",
+    "category": "installation",
+    "question_en": "Do I need to be home during installation?",
+    "question_hi": "Installation ke time ghar pe hona zaroori hai?",
+    "question_hinglish": "Installation ke waqt ghar pe rehna padega kya?",
+    "answer_en": "Yes, someone above 18 years of age needs to be present during installation. The technician will need access to set up equipment, drill if necessary, and get your sign-off on the installation.",
+    "answer_hi": "Haan, installation ke waqt ghar mein kisi 18 saal se upar ke vyakti ka hona zaroori hai. Technician ko equipment lagane, zaroorat ho toh drilling karne, aur installation ki sign-off lene ke liye kisi ki zaroorat hogi."
+  },
+  {
+    "id": "FAQ-016",
+    "category": "installation",
+    "question_en": "Is there an installation charge?",
+    "question_hi": "Installation ka alag se charge lagta hai kya?",
+    "question_hinglish": "Installation charge lagega kya alag se?",
+    "answer_en": "Installation charges may apply depending on the plan you choose and any ongoing offers. Some plans include free installation. Check the latest offers on Jio.com or ask our sales team for current promotions.",
+    "answer_hi": "Installation charge plan pe aur current offers pe depend karta hai. Kuch plans mein free installation milti hai. Latest offers ke liye Jio.com pe check karein ya hamare sales team se poochein ki abhi kya promotions chal rahe hain."
+  },
+  {
+    "id": "FAQ-017",
+    "category": "connectivity",
+    "question_en": "My internet is not working, what should I do first?",
+    "question_hi": "Internet nahi chal raha, pehle kya karein?",
+    "question_hinglish": "Net nahi chal raha toh pehle kya karna chahiye?",
+    "answer_en": "First, check if all router lights are green. If there's a red light, check the fiber cable connection. Try restarting the router by unplugging it for 30 seconds. Check if the issue is with one device or all devices. If nothing works, call our support at 198.",
+    "answer_hi": "Pehle dekh lein ki router ki saari lights green hain ya nahi. Agar red light hai toh fiber cable check karein. Router restart karein - power cable nikaalein, 30 second rukein, phir wapas lagaaein. Check karein ki problem ek device mein hai ya sabhi mein. Kuch kaam na aaye toh 198 pe call karein."
+  },
+  {
+    "id": "FAQ-018",
+    "category": "connectivity",
+    "question_en": "Why does my internet slow down in the evening?",
+    "question_hi": "Shaam ko internet slow kyun ho jaata hai?",
+    "question_hinglish": "Evening mein internet kyun slow hota hai?",
+    "answer_en": "Evening is peak usage time when many people in your area are online simultaneously. Also, your household likely has more devices active in the evening. If this is a regular issue, consider upgrading to a higher plan for better bandwidth during peak hours.",
+    "answer_hi": "Shaam ka time peak usage hours hota hai jab area mein bahut log ek saath online hote hain. Aapke ghar mein bhi shaam ko zyada devices active hote honge. Agar yeh regular problem hai toh zyada speed wale plan pe upgrade kar lein taaki peak hours mein bhi achhi speed mile."
+  },
+  {
+    "id": "FAQ-019",
+    "category": "connectivity",
+    "question_en": "How many devices can I connect to my JioFiber?",
+    "question_hi": "JioFiber mein kitne devices connect kar sakte hain?",
+    "question_hinglish": "Kitne devices connect ho sakte hain JioFiber pe?",
+    "answer_en": "Technically you can connect up to 30-40 devices to the router, but for good performance, we recommend: Silver/AirFiber 599 for 3-5 devices, Gold/AirFiber 999 for 5-8 devices, Diamond 1499 for 8-10 devices, Platinum 2499 for 10-15 devices, and Titanium 3999 for 15+ devices.",
+    "answer_hi": "Router pe technically 30-40 devices connect ho sakte hain, lekin achhi performance ke liye: Silver/AirFiber 599 mein 3-5 devices, Gold/AirFiber 999 mein 5-8 devices, Diamond 1499 mein 8-10 devices, Platinum 2499 mein 10-15 devices, aur Titanium 3999 mein 15 se zyada devices theek se chalenge."
+  },
+  {
+    "id": "FAQ-020",
+    "category": "connectivity",
+    "question_en": "Can I use my own router with JioFiber?",
+    "question_hi": "Kya apna router laga sakte hain JioFiber ke saath?",
+    "question_hinglish": "Apna personal router use kar sakte hain kya JioFiber ke saath?",
+    "answer_en": "Yes, you can connect your own router to the JioFiber ONT device using an ethernet cable. Set your router to bridge mode or connect it as a secondary access point. The JioFiber ONT must stay connected as it handles the fiber signal.",
+    "answer_hi": "Haan, apna router JioFiber ONT device se ethernet cable se connect kar sakte hain. Apne router ko bridge mode mein set karein ya secondary access point ki tarah connect karein. JioFiber ONT connected rehna chahiye kyunki woh fiber signal handle karta hai."
+  },
+  {
+    "id": "FAQ-021",
+    "category": "wifi",
+    "question_en": "What is the difference between 2.4GHz and 5GHz WiFi?",
+    "question_hi": "2.4GHz aur 5GHz WiFi mein kya fark hai?",
+    "question_hinglish": "2.4GHz aur 5GHz WiFi mein difference kya hai?",
+    "answer_en": "2.4GHz has longer range and better wall penetration but slower maximum speed. 5GHz offers faster speeds but shorter range. Use 5GHz for devices near the router (gaming, streaming) and 2.4GHz for devices far from the router (bedroom, balcony).",
+    "answer_hi": "2.4GHz ki range zyada hoti hai aur diwaron se achha signal jaata hai lekin maximum speed kam hoti hai. 5GHz mein speed zyada milti hai lekin range kam hoti hai. Router ke paas wale devices (gaming, streaming) ke liye 5GHz use karein aur door wale devices (bedroom, balcony) ke liye 2.4GHz."
+  },
+  {
+    "id": "FAQ-022",
+    "category": "wifi",
+    "question_en": "How can I improve my WiFi signal in far rooms?",
+    "question_hi": "Door wale kamre mein WiFi signal kaise badhaayein?",
+    "question_hinglish": "Door ke room mein WiFi achha kaise aaye?",
+    "answer_en": "Try repositioning the router to a more central location. Remove physical obstructions. Use a WiFi mesh extender or repeater for large homes. Connect stationary devices like Smart TV with ethernet cables to free up WiFi bandwidth for mobile devices.",
+    "answer_hi": "Router ko ghar ke beech mein rakhne ki koshish karein. Raaste mein se physical cheezein hataayein. Bade ghar ke liye WiFi mesh extender ya repeater lagaaein. Smart TV jaise stationary devices ko ethernet cable se connect karein taaki WiFi bandwidth mobile devices ke liye free rahe."
+  },
+  {
+    "id": "FAQ-023",
+    "category": "wifi",
+    "question_en": "My WiFi is slow but wired connection is fast, why?",
+    "question_hi": "WiFi slow hai lekin cable se fast hai, kyun?",
+    "question_hinglish": "WiFi pe slow hai but ethernet se fast, kyun?",
+    "answer_en": "WiFi speed is affected by distance from router, wall interference, other electronic devices, and channel congestion from neighboring WiFi networks. Wired connections bypass all these issues. For best WiFi, ensure the router is centrally placed and try switching WiFi channels.",
+    "answer_hi": "WiFi speed pe bahut cheezein asar dalti hain - router se doori, diwaron ki wajah se interference, doosre electronic devices, aur padosi ke WiFi se channel congestion. Cable mein yeh sab problems nahi hoti. Achhe WiFi ke liye router beech mein rakhein aur WiFi channel change karke dekhein."
+  },
+  {
+    "id": "FAQ-024",
+    "category": "account",
+    "question_en": "How do I upgrade or downgrade my plan?",
+    "question_hi": "Plan upgrade ya downgrade kaise karein?",
+    "question_hinglish": "Plan change karna hai upgrade ya downgrade, kaise karein?",
+    "answer_en": "You can change your plan through the MyJio app under plan management, call our support at 198, visit a Jio Store, or chat with us on WhatsApp. Plan changes usually take effect within 24 hours.",
+    "answer_hi": "Plan change karne ke liye MyJio app mein plan management mein jaayein, 198 pe call karein, Jio Store pe jaayein, ya WhatsApp pe hum se baat karein. Plan change usually 24 ghanton mein active ho jaata hai."
+  },
+  {
+    "id": "FAQ-025",
+    "category": "account",
+    "question_en": "How do I cancel my JioFiber connection?",
+    "question_hi": "JioFiber connection cancel kaise karein?",
+    "question_hinglish": "Connection cancel karna hai kaise karein?",
+    "answer_en": "To cancel, call 198 or visit a Jio Store. You'll need to return the router and ONT equipment. Any pending bills must be cleared. The disconnection usually happens within 7 working days. If you're canceling due to issues, let us try to resolve them first.",
+    "answer_hi": "Cancel karne ke liye 198 pe call karein ya Jio Store jaayein. Router aur ONT equipment wapas karna hoga. Baaki bacha hua bill clear karna hoga. Disconnection usually 7 working days mein ho jaata hai. Agar kisi problem ki wajah se cancel kar rahe hain toh pehle hume solve karne ka mauka dein."
+  },
+  {
+    "id": "FAQ-026",
+    "category": "account",
+    "question_en": "Can I transfer my JioFiber connection to a new address?",
+    "question_hi": "Naye address pe JioFiber transfer ho sakta hai kya?",
+    "question_hinglish": "Naye ghar mein JioFiber shift kar sakte hain kya?",
+    "answer_en": "Yes, JioFiber connections can be transferred to a new address if the new location is serviceable. Call 198 or visit a Jio Store to request a transfer. The process takes about 5-7 working days. Your plan and account details remain the same.",
+    "answer_hi": "Haan, agar naye address pe JioFiber ki service available hai toh connection transfer ho sakta hai. 198 pe call karein ya Jio Store jaayein transfer request ke liye. Process mein 5-7 working days lagte hain. Aapka plan aur account details same rahenge."
+  },
+  {
+    "id": "FAQ-027",
+    "category": "troubleshooting",
+    "question_en": "There is a red light on my router, what does it mean?",
+    "question_hi": "Router pe red light aa rahi hai, kya karna chahiye?",
+    "question_hinglish": "Router pe red light hai, kya matlab hai?",
+    "answer_en": "A red LOS (Loss of Signal) light means the fiber optic signal is not reaching your router. Check if the fiber cable behind the router is securely connected. Gently clean the connector if dusty. If the red light persists, the fiber cable may be damaged - contact support.",
+    "answer_hi": "Red LOS (Loss of Signal) light ka matlab hai ki fiber optic signal router tak nahi pahunch raha. Router ke peeche fiber cable check karein ki achhe se laga hai. Dhool ho toh connector dheere se saaf karein. Agar red light bani rahe toh fiber cable damage ho sakti hai - support se baat karein."
+  },
+  {
+    "id": "FAQ-028",
+    "category": "troubleshooting",
+    "question_en": "My internet works on some devices but not others",
+    "question_hi": "Kuch devices pe internet chal raha hai kuch pe nahi",
+    "question_hinglish": "Kuch devices pe net hai kuch pe nahi, kyun?",
+    "answer_en": "Try forgetting the WiFi network on the affected device and reconnecting with the password. Check if the device is connecting to the right frequency band (2.4GHz vs 5GHz). Restart the device. If still not working, restart the router to refresh the DHCP connections.",
+    "answer_hi": "Jis device pe nahi chal raha usme WiFi network forget karein aur password se dubara connect karein. Check karein ki device sahi frequency band (2.4GHz ya 5GHz) pe connect ho raha hai. Device restart karein. Phir bhi na chale toh router restart karein taaki DHCP connections refresh ho jaayein."
+  },
+  {
+    "id": "FAQ-029",
+    "category": "troubleshooting",
+    "question_en": "How do I factory reset my router?",
+    "question_hi": "Router factory reset kaise karein?",
+    "question_hinglish": "Router ko factory reset karna hai kaise karein?",
+    "answer_en": "Find the small reset button (usually a pinhole) on the back of the router. Use a pin or paperclip to press and hold it for 10-15 seconds until the lights blink. The router will restart with default settings. You'll need to reconfigure WiFi name and password after reset.",
+    "answer_hi": "Router ke peeche chhota reset button (pin hole) hoga. Pin ya paperclip se 10-15 second tak dabaaye rakhein jab tak lights blink na karein. Router default settings ke saath restart hoga. Reset ke baad WiFi naam aur password dubara set karna padega."
+  },
+  {
+    "id": "FAQ-030",
+    "category": "troubleshooting",
+    "question_en": "My internet is slow only on WiFi but fast on cable",
+    "question_hi": "WiFi pe slow hai lekin cable se fast, kya karein?",
+    "question_hinglish": "WiFi slow hai but cable fast, kya karna chahiye?",
+    "answer_en": "This indicates WiFi interference. Try: 1) Change WiFi channel in router settings 2) Switch to 5GHz band for nearby devices 3) Move router to a central, open location 4) Check for interfering devices like microwaves, baby monitors 5) Consider a WiFi mesh extender.",
+    "answer_hi": "Iska matlab WiFi interference hai. Yeh karein: 1) Router settings mein WiFi channel change karein 2) Paas wale devices 5GHz band pe connect karein 3) Router ko khuli aur beech wali jagah rakhein 4) Microwave, baby monitor jaise interfere karne wale devices check karein 5) WiFi mesh extender lagaane ke baare mein sochein."
+  },
+  {
+    "id": "FAQ-031",
+    "category": "gaming",
+    "question_en": "Which plan is best for online gaming?",
+    "question_hi": "Online gaming ke liye kaunsa plan best hai?",
+    "question_hinglish": "Gaming ke liye best plan kaunsa hai?",
+    "answer_en": "For gaming, low latency matters more than raw speed. Gold 999 (100Mbps) is sufficient for most gamers. Use a wired ethernet connection instead of WiFi to get the lowest ping. If you stream while gaming or have many gamers at home, go for Diamond 1499 or higher.",
+    "answer_hi": "Gaming ke liye low latency zyada zaroori hai speed se. Gold 999 (100Mbps) zyaadatar gamers ke liye kaafi hai. WiFi ki jagah ethernet cable use karein lowest ping ke liye. Agar gaming ke saath streaming bhi karni hai ya ghar mein kai gamers hain toh Diamond 1499 ya upar wala plan lein."
+  },
+  {
+    "id": "FAQ-032",
+    "category": "gaming",
+    "question_en": "How do I reduce my ping for gaming?",
+    "question_hi": "Gaming mein ping kaise kam karein?",
+    "question_hinglish": "Ping kam karna hai gaming mein, kaise karein?",
+    "answer_en": "Use ethernet cable instead of WiFi, close background apps and downloads, ensure no one else is doing heavy downloads, enable QoS in router settings to prioritize gaming traffic, and try changing DNS to Google (8.8.8.8) or Cloudflare (1.1.1.1).",
+    "answer_hi": "WiFi ki jagah ethernet cable use karein, background apps aur downloads band karein, check karein ki koi aur heavy download toh nahi kar raha, router settings mein QoS enable karein gaming traffic ko priority dene ke liye, aur DNS ko Google (8.8.8.8) ya Cloudflare (1.1.1.1) pe change karke dekhein."
+  },
+  {
+    "id": "FAQ-033",
+    "category": "streaming",
+    "question_en": "Why does Netflix keep buffering on my connection?",
+    "question_hi": "Netflix mein bahut buffering kyun hoti hai?",
+    "question_hinglish": "Netflix pe buffering kyun hota hai baar baar?",
+    "answer_en": "Buffering can happen due to: slow WiFi connection (try ethernet), too many devices using bandwidth, your plan speed might not be enough for HD/4K streaming, or DNS issues. Try restarting the router and changing DNS to 8.8.8.8 for better streaming server routing.",
+    "answer_hi": "Buffering ke reasons: WiFi slow ho sakta hai (ethernet try karein), bahut saare devices bandwidth use kar rahe honge, plan ki speed HD/4K streaming ke liye kaafi nahi hogi, ya DNS issue hai. Router restart karein aur DNS 8.8.8.8 pe change karein taaki streaming server tak better routing mile."
+  },
+  {
+    "id": "FAQ-034",
+    "category": "streaming",
+    "question_en": "Does JioFiber come with any free OTT subscriptions?",
+    "question_hi": "JioFiber ke saath koi free OTT subscription milta hai?",
+    "question_hinglish": "JioFiber mein free OTT apps milte hain kya?",
+    "answer_en": "Yes, higher tier JioFiber plans include complimentary OTT app subscriptions. The specific apps and number of subscriptions vary by plan. Check the MyJio app or Jio.com for the latest list of included OTT apps with your plan.",
+    "answer_hi": "Haan, higher tier JioFiber plans ke saath complimentary OTT app subscriptions milte hain. Kaunse apps milenge yeh plan pe depend karta hai. MyJio app ya Jio.com pe check karein ki aapke plan ke saath kaunse OTT apps milte hain."
+  },
+  {
+    "id": "FAQ-035",
+    "category": "security",
+    "question_en": "How do I know if someone is stealing my WiFi?",
+    "question_hi": "Kaise pata chalega ki koi mera WiFi chura raha hai?",
+    "question_hinglish": "Koi mera WiFi use kar raha hai kaise pata karein?",
+    "answer_en": "Check connected devices in the MyJio app or router admin panel (192.168.1.1). Count the devices and compare with your household devices. If you see unknown devices, change your WiFi password immediately to a strong one with letters, numbers, and symbols.",
+    "answer_hi": "MyJio app ya router admin panel (192.168.1.1) mein connected devices check karein. Devices gin lein aur apne ghar ke devices se compare karein. Agar unknown devices dikhein toh turant WiFi password change karein - strong password rakhein jismein letters, numbers aur symbols hon."
+  },
+  {
+    "id": "FAQ-036",
+    "category": "security",
+    "question_en": "How do I set up a guest WiFi network?",
+    "question_hi": "Guest WiFi network kaise banayein?",
+    "question_hinglish": "Guests ke liye alag WiFi kaise set up karein?",
+    "answer_en": "Login to router admin panel at 192.168.1.1. Look for Guest Network settings under WiFi configuration. Enable it, set a different name and password from your main network. Guest network keeps visitors separate from your personal devices for security.",
+    "answer_hi": "192.168.1.1 pe router admin panel mein login karein. WiFi configuration mein Guest Network settings dhundhein. Enable karein, main network se alag naam aur password set karein. Guest network visitors ko aapke personal devices se alag rakhta hai security ke liye."
+  },
+  {
+    "id": "FAQ-037",
+    "category": "work_from_home",
+    "question_en": "Which plan is best for work from home?",
+    "question_hi": "Work from home ke liye kaunsa plan achha hai?",
+    "question_hinglish": "WFH ke liye best plan kaunsa lein?",
+    "answer_en": "For work from home with video calls, we recommend Gold 999 (100Mbps) for single user, or Diamond 1499 (150Mbps) if multiple people work from home. Use ethernet for your work laptop for the most stable connection during meetings.",
+    "answer_hi": "Work from home aur video calls ke liye ek user ke liye Gold 999 (100Mbps) recommend karte hain, ya agar ghar mein kai log WFH karte hain toh Diamond 1499 (150Mbps). Meetings ke liye work laptop ko ethernet cable se connect karein sabse stable connection milega."
+  },
+  {
+    "id": "FAQ-038",
+    "category": "work_from_home",
+    "question_en": "My VPN doesn't work on JioFiber, what should I do?",
+    "question_hi": "JioFiber pe VPN nahi chal raha, kya karein?",
+    "question_hinglish": "VPN nahi chal raha JioFiber pe, kya karna chahiye?",
+    "answer_en": "Check if VPN passthrough is enabled in your router settings. Go to 192.168.1.1 and look for VPN or firewall settings. Enable IPSec, L2TP, and PPTP passthrough. If still not working, try changing the VPN protocol in your VPN client settings.",
+    "answer_hi": "Router settings mein VPN passthrough enable hai ya nahi check karein. 192.168.1.1 pe jaayein aur VPN ya firewall settings dhundhein. IPSec, L2TP, aur PPTP passthrough enable karein. Phir bhi na chale toh VPN client settings mein VPN protocol change karke dekhein."
+  },
+  {
+    "id": "FAQ-039",
+    "category": "service",
+    "question_en": "How do I register a complaint?",
+    "question_hi": "Complaint kaise darj karein?",
+    "question_hinglish": "Complaint kaise register karein?",
+    "answer_en": "You can register a complaint through: MyJio app support section, calling 198 (toll-free), WhatsApp support, visiting a Jio Store, or through our website chat. You'll receive a complaint reference number for tracking.",
+    "answer_hi": "Complaint register karne ke tarike: MyJio app ke support section se, 198 pe call karke (toll-free), WhatsApp support se, Jio Store jaake, ya website chat se. Aapko complaint reference number milega tracking ke liye."
+  },
+  {
+    "id": "FAQ-040",
+    "category": "service",
+    "question_en": "How do I check the status of my complaint?",
+    "question_hi": "Complaint ka status kaise check karein?",
+    "question_hinglish": "Complaint status kaise dekhein?",
+    "answer_en": "Check your complaint status in the MyJio app under support section using your complaint reference number. You can also call 198 and provide the reference number. Our agents can look up the status and give you an update.",
+    "answer_hi": "MyJio app mein support section mein complaint reference number se status check karein. 198 pe call karke bhi reference number dein toh status bata denge. Hamare agents status dekh ke aapko update de sakte hain."
+  },
+  {
+    "id": "FAQ-041",
+    "category": "service",
+    "question_en": "What is JioFiber's customer support number?",
+    "question_hi": "JioFiber ka customer support number kya hai?",
+    "question_hinglish": "JioFiber support ka number kya hai?",
+    "answer_en": "JioFiber customer support is available at 198 (toll-free from Jio numbers). Support is available 24x7. You can also reach us through the MyJio app chat, WhatsApp, or visit any Jio Store.",
+    "answer_hi": "JioFiber customer support 198 pe available hai (Jio number se toll-free). Support 24x7 milta hai. MyJio app chat, WhatsApp, ya kisi bhi Jio Store pe jaake bhi help le sakte hain."
+  },
+  {
+    "id": "FAQ-042",
+    "category": "data",
+    "question_en": "What happens when I use all my monthly data?",
+    "question_hi": "Monthly data khatam hone pe kya hota hai?",
+    "question_hinglish": "Data khatam ho jaaye toh kya hoga?",
+    "answer_en": "When your monthly data limit (FUP) is exhausted, your speed is reduced but the connection continues. The reduced speed allows basic browsing and messaging. To restore full speed, you can buy a data booster or wait for the next billing cycle.",
+    "answer_hi": "Jab monthly data limit (FUP) khatam ho jaati hai toh speed kam ho jaati hai lekin connection band nahi hota. Kam speed pe basic browsing aur messaging chal sakti hai. Full speed wapas laane ke liye data booster kharid sakte hain ya next billing cycle ka wait karein."
+  },
+  {
+    "id": "FAQ-043",
+    "category": "data",
+    "question_en": "How do I check my data usage?",
+    "question_hi": "Data usage kaise check karein?",
+    "question_hinglish": "Data kitna use hua kaise dekhein?",
+    "answer_en": "Check your data usage in the MyJio app on the home screen or under account details. It shows current cycle usage, remaining data, and daily usage breakdown. You can also check through the router admin panel at 192.168.1.1.",
+    "answer_hi": "MyJio app mein home screen pe ya account details mein data usage dikh jaata hai. Current cycle ka usage, kitna data bacha hai, aur daily usage breakdown sab dikhta hai. Router admin panel 192.168.1.1 pe bhi check kar sakte hain."
+  },
+  {
+    "id": "FAQ-044",
+    "category": "technical",
+    "question_en": "What is an ONT and do I need to worry about it?",
+    "question_hi": "ONT kya hota hai aur iske baare mein chinta karni chahiye?",
+    "question_hinglish": "ONT kya hai aur iska kya karna hai?",
+    "answer_en": "ONT (Optical Network Terminal) is the small box that converts the fiber optic signal to a regular internet signal. It's usually a small white box near your main entry point. Don't unplug it - it needs to stay powered on. If its lights turn red, contact support.",
+    "answer_hi": "ONT (Optical Network Terminal) woh chhota box hota hai jo fiber optic signal ko normal internet signal mein convert karta hai. Usually ghar ke entry point ke paas chhota sa white box hota hai. Ise unplug mat karein - ise hamesha on rehna chahiye. Agar isme red light aaye toh support ko call karein."
+  },
+  {
+    "id": "FAQ-045",
+    "category": "technical",
+    "question_en": "Can I use JioFiber with a mesh WiFi system?",
+    "question_hi": "JioFiber ke saath mesh WiFi system laga sakte hain?",
+    "question_hinglish": "Mesh WiFi system use kar sakte hain JioFiber ke saath?",
+    "answer_en": "Yes, you can connect a mesh WiFi system to your JioFiber router or ONT via ethernet. Connect the primary mesh unit to the JioFiber router's LAN port. This is especially recommended for large homes on Diamond 1499, Platinum 2499, or Titanium 3999 plans.",
+    "answer_hi": "Haan, mesh WiFi system ko JioFiber router ya ONT ke saath ethernet se connect kar sakte hain. Primary mesh unit ko JioFiber router ke LAN port se connect karein. Yeh especially bade gharon ke liye recommend hai jo Diamond 1499, Platinum 2499, ya Titanium 3999 plan pe hain."
+  },
+  {
+    "id": "FAQ-046",
+    "category": "technical",
+    "question_en": "Why should I use DNS 8.8.8.8?",
+    "question_hi": "DNS 8.8.8.8 kyun use karna chahiye?",
+    "question_hinglish": "Google DNS 8.8.8.8 lagane se kya fayda hoga?",
+    "answer_en": "Google DNS (8.8.8.8) or Cloudflare DNS (1.1.1.1) can improve website loading speeds and fix issues where certain websites don't open. These public DNS servers are often faster and more reliable than default ISP DNS. They can also help with streaming and gaming performance.",
+    "answer_hi": "Google DNS (8.8.8.8) ya Cloudflare DNS (1.1.1.1) se websites jaldi khulti hain aur jo websites nahi khulti woh bhi fix ho sakti hain. Yeh public DNS servers default ISP DNS se achhe aur zyada reliable hote hain. Streaming aur gaming performance mein bhi fayda hota hai."
+  },
+  {
+    "id": "FAQ-047",
+    "category": "airfiber",
+    "question_en": "Is AirFiber as good as regular JioFiber?",
+    "question_hi": "Kya AirFiber utna achha hai jitna normal JioFiber?",
+    "question_hinglish": "AirFiber normal JioFiber jitna achha hai kya?",
+    "answer_en": "AirFiber provides excellent service for most uses. Wired JioFiber may have slightly lower latency and more consistent speeds since it uses a physical cable. AirFiber can be slightly affected by severe weather but modern equipment handles most conditions well.",
+    "answer_hi": "AirFiber zyaadatar kaam ke liye bahut achhi service deta hai. Wired JioFiber mein thoda kam latency aur zyada consistent speed ho sakti hai kyunki physical cable hoti hai. AirFiber pe severe weather ka thoda asar pad sakta hai lekin modern equipment zyaadatar conditions handle kar leta hai."
+  },
+  {
+    "id": "FAQ-048",
+    "category": "airfiber",
+    "question_en": "Does weather affect AirFiber connection?",
+    "question_hi": "Mausam ka AirFiber pe asar padta hai kya?",
+    "question_hinglish": "Baarish ya toofan mein AirFiber pe asar hota hai kya?",
+    "answer_en": "Heavy rain or storms can temporarily affect AirFiber signal quality. Normal rain usually doesn't cause issues. If you experience problems during bad weather, wait for conditions to improve. If issues persist after weather clears, contact support for antenna alignment check.",
+    "answer_hi": "Bahut tez baarish ya toofan mein AirFiber signal pe thoda asar pad sakta hai. Normal baarish mein usually problem nahi hoti. Kharab mausam mein problem ho toh mausam theek hone ka wait karein. Mausam saaf hone ke baad bhi problem rahe toh support ko call karein antenna alignment check karwaane ke liye."
+  },
+  {
+    "id": "FAQ-049",
+    "category": "general",
+    "question_en": "What is JioFiber's uptime guarantee?",
+    "question_hi": "JioFiber ki uptime guarantee kya hai?",
+    "question_hinglish": "JioFiber mein kitne percent uptime ki guarantee hai?",
+    "answer_en": "JioFiber aims for 99.9% uptime reliability. In case of unplanned outages exceeding the SLA commitment, customers are eligible for prorated service credits. Scheduled maintenance is communicated in advance and typically done during off-peak hours.",
+    "answer_hi": "JioFiber 99.9% uptime reliability ka target rakhta hai. Agar unplanned outage SLA commitment se zyada ho jaaye toh customers prorated service credit ke liye eligible hain. Scheduled maintenance ke baare mein pehle se inform kiya jaata hai aur usually off-peak hours mein hota hai."
+  },
+  {
+    "id": "FAQ-050",
+    "category": "general",
+    "question_en": "Is JioFiber available in my area?",
+    "question_hi": "Kya JioFiber mere area mein available hai?",
+    "question_hinglish": "Mere area mein JioFiber milega kya?",
+    "answer_en": "Check JioFiber availability by entering your address or PIN code on Jio.com or the MyJio app. If fiber isn't available yet, AirFiber might be an option. You can also register interest and we'll notify you when service reaches your area.",
+    "answer_hi": "Jio.com ya MyJio app pe apna address ya PIN code daalke JioFiber availability check karein. Agar fiber abhi available nahi hai toh AirFiber option ho sakta hai. Interest register bhi kar sakte hain, jab aapke area mein service aayegi toh hum notify kar denge."
+  }
+]
