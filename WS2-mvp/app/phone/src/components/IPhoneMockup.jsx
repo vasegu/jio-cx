@@ -133,12 +133,14 @@ function VoiceScreen({ onClose }) {
   const [phase, setPhase] = useState('connecting') // connecting | idle | listening | thinking | speaking
   const scrollRef = useRef(null)
   const wsRef = useRef(null)
-  const audioCtxRef = useRef(null)
+  const captureCtxRef = useRef(null)  // 16kHz for mic capture
+  const playbackCtxRef = useRef(null) // 24kHz for audio playback
   const micStreamRef = useRef(null)
   const scriptNodeRef = useRef(null)
   const sourceNodeRef = useRef(null)
   const playbackQueueRef = useRef([])
   const isPlayingRef = useRef(false)
+  const nextPlayTimeRef = useRef(0)  // scheduled time for next chunk
   const pendingUserMsgRef = useRef(null)
   const pendingAgentMsgRef = useRef(null)
 
@@ -149,45 +151,51 @@ function VoiceScreen({ onClose }) {
     }
   }, [messages])
 
-  // Play queued audio chunks sequentially
-  const playNextChunk = useCallback(() => {
-    if (playbackQueueRef.current.length === 0) {
-      isPlayingRef.current = false
-      return
+  // Ensure playback AudioContext at 24kHz
+  const getPlaybackCtx = useCallback(() => {
+    if (!playbackCtxRef.current) {
+      playbackCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 })
     }
-    isPlayingRef.current = true
-    const audioBuffer = playbackQueueRef.current.shift()
-    const ctx = audioCtxRef.current
-    if (!ctx) {
-      isPlayingRef.current = false
-      return
+    if (playbackCtxRef.current.state === 'suspended') {
+      playbackCtxRef.current.resume()
     }
-    const source = ctx.createBufferSource()
-    source.buffer = audioBuffer
-    source.connect(ctx.destination)
-    source.onended = () => {
-      playNextChunk()
-    }
-    source.start()
-    sourceNodeRef.current = source
+    return playbackCtxRef.current
   }, [])
 
+  // Schedule audio chunks with precise timing - no gaps between chunks
   const enqueueAudioChunk = useCallback((base64Data) => {
-    const ctx = audioCtxRef.current
-    if (!ctx) return
+    const ctx = getPlaybackCtx()
     const raw = base64ToArrayBuffer(base64Data)
     const int16 = new Int16Array(raw)
     const float32 = int16ToFloat32(int16)
     const audioBuffer = ctx.createBuffer(1, float32.length, 24000)
     audioBuffer.copyToChannel(float32, 0)
-    playbackQueueRef.current.push(audioBuffer)
-    if (!isPlayingRef.current) {
-      playNextChunk()
+
+    const now = ctx.currentTime
+    // Schedule this chunk right after the last one ends
+    const startTime = Math.max(now, nextPlayTimeRef.current)
+    nextPlayTimeRef.current = startTime + audioBuffer.duration
+
+    const source = ctx.createBufferSource()
+    source.buffer = audioBuffer
+    source.connect(ctx.destination)
+    source.start(startTime)
+    sourceNodeRef.current = source
+    isPlayingRef.current = true
+
+    // When this chunk ends, check if more are coming
+    source.onended = () => {
+      // If no more chunks scheduled after this, we're done
+      if (ctx.currentTime >= nextPlayTimeRef.current - 0.05) {
+        isPlayingRef.current = false
+        setPhase(prev => prev === 'speaking' ? 'listening' : prev)
+      }
     }
-  }, [playNextChunk])
+  }, [getPlaybackCtx])
 
   const stopPlayback = useCallback(() => {
     playbackQueueRef.current = []
+    nextPlayTimeRef.current = 0
     if (sourceNodeRef.current) {
       try { sourceNodeRef.current.stop() } catch (_) { /* noop */ }
       sourceNodeRef.current = null
@@ -199,11 +207,15 @@ function VoiceScreen({ onClose }) {
   const startMic = useCallback(async () => {
     if (micStreamRef.current) return // already capturing
 
-    // Ensure AudioContext exists (must be created on user gesture or after ready)
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
+    // Create capture AudioContext at 16kHz (separate from playback at 24kHz)
+    if (!captureCtxRef.current) {
+      captureCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
     }
-    const ctx = audioCtxRef.current
+    const ctx = captureCtxRef.current
+    if (ctx.state === 'suspended') await ctx.resume()
+
+    // Also init playback context on this user gesture
+    getPlaybackCtx()
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -212,7 +224,7 @@ function VoiceScreen({ onClose }) {
       micStreamRef.current = stream
 
       const source = ctx.createMediaStreamSource(stream)
-      const processor = ctx.createScriptProcessor(4096, 1, 1)
+      const processor = ctx.createScriptProcessor(2048, 1, 1) // smaller buffer = lower latency
       scriptNodeRef.current = processor
 
       processor.onaudioprocess = (e) => {
@@ -231,7 +243,7 @@ function VoiceScreen({ onClose }) {
       console.error('[VoiceScreen] mic error:', err)
       setPhase('idle')
     }
-  }, [])
+  }, [getPlaybackCtx])
 
   const stopMic = useCallback(() => {
     if (scriptNodeRef.current) {
@@ -244,7 +256,15 @@ function VoiceScreen({ onClose }) {
     }
   }, [])
 
-  // WebSocket lifecycle
+  // Stable refs for callbacks so WebSocket effect has zero deps
+  const enqueueAudioChunkRef = useRef(enqueueAudioChunk)
+  const stopPlaybackRef = useRef(stopPlayback)
+  const startMicRef = useRef(startMic)
+  useEffect(() => { enqueueAudioChunkRef.current = enqueueAudioChunk }, [enqueueAudioChunk])
+  useEffect(() => { stopPlaybackRef.current = stopPlayback }, [stopPlayback])
+  useEffect(() => { startMicRef.current = startMic }, [startMic])
+
+  // WebSocket lifecycle — runs exactly once on mount, never re-creates
   useEffect(() => {
     setPhase('connecting')
     const ws = new WebSocket(WS_URL)
@@ -252,7 +272,6 @@ function VoiceScreen({ onClose }) {
 
     ws.onopen = () => {
       console.log('[VoiceScreen] WebSocket connected')
-      // Wait for "ready" message from spine before transitioning
     }
 
     ws.onmessage = (event) => {
@@ -261,84 +280,60 @@ function VoiceScreen({ onClose }) {
 
       switch (msg.type) {
         case 'ready':
-          setPhase('idle')
+          startMicRef.current()
           break
 
         case 'audio':
           setPhase('speaking')
-          enqueueAudioChunk(msg.data)
+          enqueueAudioChunkRef.current(msg.data)
           break
 
         case 'input_transcript': {
-          const text = msg.text || ''
-          if (msg.finished) {
-            // Finalize user message
-            if (pendingUserMsgRef.current !== null) {
-              setMessages(prev => {
-                const updated = [...prev]
-                updated[pendingUserMsgRef.current] = {
-                  ...updated[pendingUserMsgRef.current],
-                  text,
-                }
-                return updated
-              })
-              pendingUserMsgRef.current = null
-            } else {
-              setMessages(prev => [...prev, { from: 'user', text }])
-            }
+          const newText = msg.text || ''
+          if (!newText.trim()) break
+          if (pendingUserMsgRef.current !== null) {
+            setMessages(prev => {
+              const updated = [...prev]
+              const existing = updated[pendingUserMsgRef.current]
+              const updatedText = newText.length >= (existing.text || '').length
+                ? newText
+                : existing.text + ' ' + newText
+              updated[pendingUserMsgRef.current] = { ...existing, text: updatedText.trim() }
+              return updated
+            })
           } else {
-            // Streaming partial - update in place
-            if (pendingUserMsgRef.current !== null) {
-              setMessages(prev => {
-                const updated = [...prev]
-                updated[pendingUserMsgRef.current] = {
-                  ...updated[pendingUserMsgRef.current],
-                  text,
-                }
-                return updated
-              })
-            } else {
-              setMessages(prev => {
-                pendingUserMsgRef.current = prev.length
-                return [...prev, { from: 'user', text }]
-              })
-            }
+            setMessages(prev => {
+              pendingUserMsgRef.current = prev.length
+              return [...prev, { from: 'user', text: newText }]
+            })
+          }
+          if (msg.finished) {
+            pendingUserMsgRef.current = null
           }
           break
         }
 
         case 'output_transcript': {
-          const text = msg.text || ''
-          if (msg.finished) {
-            if (pendingAgentMsgRef.current !== null) {
-              setMessages(prev => {
-                const updated = [...prev]
-                updated[pendingAgentMsgRef.current] = {
-                  ...updated[pendingAgentMsgRef.current],
-                  text,
-                }
-                return updated
-              })
-              pendingAgentMsgRef.current = null
-            } else {
-              setMessages(prev => [...prev, { from: 'agent', text, tools: [] }])
-            }
+          const newText = msg.text || ''
+          if (!newText.trim()) break
+          if (pendingAgentMsgRef.current !== null) {
+            setMessages(prev => {
+              const updated = [...prev]
+              const existing = updated[pendingAgentMsgRef.current]
+              const updatedText = newText.length >= (existing.text || '').length
+                ? newText
+                : existing.text + ' ' + newText
+              updated[pendingAgentMsgRef.current] = { ...existing, text: updatedText.trim() }
+              return updated
+            })
           } else {
-            if (pendingAgentMsgRef.current !== null) {
-              setMessages(prev => {
-                const updated = [...prev]
-                updated[pendingAgentMsgRef.current] = {
-                  ...updated[pendingAgentMsgRef.current],
-                  text,
-                }
-                return updated
-              })
-            } else {
-              setMessages(prev => {
-                pendingAgentMsgRef.current = prev.length
-                return [...prev, { from: 'agent', text, tools: [] }]
-              })
-            }
+            setMessages(prev => {
+              pendingAgentMsgRef.current = prev.length
+              return [...prev, { from: 'agent', text: newText, tools: [] }]
+            })
+          }
+          if (msg.finished) {
+            pendingAgentMsgRef.current = null
           }
           break
         }
@@ -346,7 +341,6 @@ function VoiceScreen({ onClose }) {
         case 'tool_call': {
           setPhase('thinking')
           const toolName = msg.tool || 'tool'
-          // Attach tool badge to the current agent message
           if (pendingAgentMsgRef.current !== null) {
             setMessages(prev => {
               const updated = [...prev]
@@ -359,7 +353,6 @@ function VoiceScreen({ onClose }) {
               return updated
             })
           } else {
-            // No agent message yet - create a placeholder
             setMessages(prev => {
               pendingAgentMsgRef.current = prev.length
               return [...prev, { from: 'agent', text: '', tools: [toolName] }]
@@ -369,14 +362,13 @@ function VoiceScreen({ onClose }) {
         }
 
         case 'turn_complete':
-          stopPlayback()
-          pendingAgentMsgRef.current = null
-          pendingUserMsgRef.current = null
-          setPhase('idle')
+          if (!isPlayingRef.current) {
+            setPhase('listening')
+          }
           break
 
         case 'interrupted':
-          stopPlayback()
+          stopPlaybackRef.current()
           setPhase('listening')
           break
 
@@ -409,35 +401,33 @@ function VoiceScreen({ onClose }) {
       ws.close()
       wsRef.current = null
     }
-  }, [enqueueAudioChunk, stopPlayback])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // empty deps — WebSocket created once, callbacks accessed via refs
 
-  // Cleanup mic and audio context on unmount
+  // Cleanup mic and audio contexts on unmount
   useEffect(() => {
     return () => {
       stopMic()
       stopPlayback()
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {})
-        audioCtxRef.current = null
+      if (captureCtxRef.current) {
+        captureCtxRef.current.close().catch(() => {})
+        captureCtxRef.current = null
+      }
+      if (playbackCtxRef.current) {
+        playbackCtxRef.current.close().catch(() => {})
+        playbackCtxRef.current = null
       }
     }
   }, [stopMic, stopPlayback])
 
   const handleOrbTap = useCallback(() => {
-    // Initialize AudioContext on first user gesture if needed
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
-    }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume()
-    }
-
     if (phase === 'listening') {
       stopMic()
       setPhase('idle')
     } else if (phase === 'speaking') {
       stopPlayback()
-      setPhase('idle')
+      setPhase('listening')
+      startMic()
     } else if (phase === 'idle') {
       startMic()
     }

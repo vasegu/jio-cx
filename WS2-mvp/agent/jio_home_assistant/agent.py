@@ -14,10 +14,10 @@ from jio_home_assistant.tools.rag_search import jio_knowledge_search
 
 _system_prompt = (Path(__file__).parent / "prompts" / "system.md").read_text()
 
-# Text mode for dev/testing (works with adk web text chat)
-MODEL = "gemini-2.5-flash"
-# Voice mode (only works with Audio button, not text):
-# MODEL = "gemini-live-2.5-flash-native-audio"
+# Voice mode - native audio in/out via Live API
+MODEL = "gemini-live-2.5-flash-native-audio"
+# Text fallback:
+# MODEL = "gemini-2.5-flash"
 
 root_agent = Agent(
     model=MODEL,
