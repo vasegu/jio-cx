@@ -13,6 +13,9 @@ Reference for the jiobuddy-492811 project. Saves time on auth/API issues.
 | Model region | us-central1 (models work here) |
 | RAG Corpus ID | 2305843009213693952 |
 | GCS bucket | gs://jio-cx-corpus-eu/ |
+| Agent Engine ID | 2407535190399254528 |
+| Agent Engine resource | projects/896447499660/locations/us-central1/reasoningEngines/2407535190399254528 |
+| Staging bucket | gs://jio-cx-agent-staging/ |
 
 ## Auth - What Works Where
 
