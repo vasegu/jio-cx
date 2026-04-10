@@ -88,14 +88,59 @@ const SERVICES = [
   { key: 'shopping', title: 'SHOPPING', sub: 'Best deals', color: '#EFA73D' },
 ]
 
-/* ---------- VoiceScreen (live agent) ---------- */
-function VoiceScreen({ onClose, customerId }) {
+/* ---------- WebSocket URL ---------- */
+const WS_URL = 'ws://localhost:9090'
+
+/* ---------- Audio helpers ---------- */
+function floatTo16BitPCM(float32Array) {
+  const int16 = new Int16Array(float32Array.length)
+  for (let i = 0; i < float32Array.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32Array[i]))
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF
+  }
+  return int16
+}
+
+function int16ToFloat32(int16Array) {
+  const float32 = new Float32Array(int16Array.length)
+  for (let i = 0; i < int16Array.length; i++) {
+    float32[i] = int16Array[i] / 32768
+  }
+  return float32
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
+function base64ToArrayBuffer(base64) {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes.buffer
+}
+
+/* ---------- VoiceScreen (live agent via WebSocket) ---------- */
+function VoiceScreen({ onClose }) {
   const [messages, setMessages] = useState([])
-  const [phase, setPhase] = useState('idle') // idle | listening | thinking | speaking
-  const [isListening, setIsListening] = useState(false)
+  const [phase, setPhase] = useState('connecting') // connecting | idle | listening | thinking | speaking
   const scrollRef = useRef(null)
-  const recognitionRef = useRef(null)
-  const synthRef = useRef(null)
+  const wsRef = useRef(null)
+  const audioCtxRef = useRef(null)
+  const micStreamRef = useRef(null)
+  const scriptNodeRef = useRef(null)
+  const sourceNodeRef = useRef(null)
+  const playbackQueueRef = useRef([])
+  const isPlayingRef = useRef(false)
+  const pendingUserMsgRef = useRef(null)
+  const pendingAgentMsgRef = useRef(null)
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -104,159 +149,300 @@ function VoiceScreen({ onClose, customerId }) {
     }
   }, [messages])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.abort() } catch (_) { /* noop */ }
-      }
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-    }
-  }, [])
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch (_) { /* noop */ }
-    }
-    setIsListening(false)
-    setPhase('idle')
-  }, [])
-
-  const sendToAgent = useCallback(async (text) => {
-    setPhase('thinking')
-
-    // Add user message
-    setMessages(prev => [...prev, { from: 'user', text }])
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          customer_id: customerId,
-          user_id: 'phone-user',
-        }),
-      })
-
-      if (!res.ok) {
-        throw new Error('API request failed')
-      }
-
-      const data = await res.json()
-      const responseText = data.response || 'I could not process that request.'
-      const tools = (data.tools || []).filter(t => t !== 'transfer_to_agent')
-      const agentName = data.agent || ''
-
-      // Add agent message
-      setMessages(prev => [...prev, {
-        from: 'agent',
-        text: responseText,
-        tools,
-        agent: agentName,
-      }])
-
-      // Speak the response using browser TTS
-      if (window.speechSynthesis && responseText) {
-        setPhase('speaking')
-        const utterance = new SpeechSynthesisUtterance(responseText)
-        // Use Hindi for Indian customers, English fallback
-        utterance.lang = customerId.startsWith('JIO') ? 'hi-IN' : 'en-US'
-        utterance.rate = 1.0
-        utterance.pitch = 1.0
-        synthRef.current = utterance
-
-        utterance.onend = () => {
-          setPhase('idle')
-          synthRef.current = null
-        }
-        utterance.onerror = () => {
-          setPhase('idle')
-          synthRef.current = null
-        }
-
-        window.speechSynthesis.speak(utterance)
-      } else {
-        setPhase('idle')
-      }
-    } catch (err) {
-      console.error('[VoiceScreen] agent error:', err)
-      setMessages(prev => [...prev, {
-        from: 'agent',
-        text: 'Sorry, I could not reach the assistant. Please try again.',
-        tools: [],
-      }])
-      setPhase('idle')
-    }
-  }, [customerId])
-
-  const startListening = useCallback(() => {
-    // Cancel any ongoing speech
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel()
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      console.error('[VoiceScreen] Speech Recognition not supported')
+  // Play queued audio chunks sequentially
+  const playNextChunk = useCallback(() => {
+    if (playbackQueueRef.current.length === 0) {
+      isPlayingRef.current = false
       return
     }
-
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'hi-IN'
-    recognition.continuous = false
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
-    recognitionRef.current = recognition
-
-    recognition.onstart = () => {
-      setIsListening(true)
-      setPhase('listening')
+    isPlayingRef.current = true
+    const audioBuffer = playbackQueueRef.current.shift()
+    const ctx = audioCtxRef.current
+    if (!ctx) {
+      isPlayingRef.current = false
+      return
     }
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript
-      if (transcript) {
-        setIsListening(false)
-        sendToAgent(transcript)
-      }
+    const source = ctx.createBufferSource()
+    source.buffer = audioBuffer
+    source.connect(ctx.destination)
+    source.onended = () => {
+      playNextChunk()
     }
+    source.start()
+    sourceNodeRef.current = source
+  }, [])
 
-    recognition.onerror = (event) => {
-      console.error('[VoiceScreen] recognition error:', event.error)
-      setIsListening(false)
-      setPhase('idle')
+  const enqueueAudioChunk = useCallback((base64Data) => {
+    const ctx = audioCtxRef.current
+    if (!ctx) return
+    const raw = base64ToArrayBuffer(base64Data)
+    const int16 = new Int16Array(raw)
+    const float32 = int16ToFloat32(int16)
+    const audioBuffer = ctx.createBuffer(1, float32.length, 24000)
+    audioBuffer.copyToChannel(float32, 0)
+    playbackQueueRef.current.push(audioBuffer)
+    if (!isPlayingRef.current) {
+      playNextChunk()
     }
+  }, [playNextChunk])
 
-    recognition.onend = () => {
-      setIsListening(false)
-      if (phase === 'listening') {
-        setPhase('idle')
-      }
+  const stopPlayback = useCallback(() => {
+    playbackQueueRef.current = []
+    if (sourceNodeRef.current) {
+      try { sourceNodeRef.current.stop() } catch (_) { /* noop */ }
+      sourceNodeRef.current = null
     }
+    isPlayingRef.current = false
+  }, [])
+
+  // Start capturing microphone audio and streaming over WebSocket
+  const startMic = useCallback(async () => {
+    if (micStreamRef.current) return // already capturing
+
+    // Ensure AudioContext exists (must be created on user gesture or after ready)
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
+    }
+    const ctx = audioCtxRef.current
 
     try {
-      recognition.start()
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: 16000, channelCount: 1 },
+      })
+      micStreamRef.current = stream
+
+      const source = ctx.createMediaStreamSource(stream)
+      const processor = ctx.createScriptProcessor(4096, 1, 1)
+      scriptNodeRef.current = processor
+
+      processor.onaudioprocess = (e) => {
+        const ws = wsRef.current
+        if (!ws || ws.readyState !== WebSocket.OPEN) return
+        const inputData = e.inputBuffer.getChannelData(0)
+        const pcm16 = floatTo16BitPCM(inputData)
+        const b64 = arrayBufferToBase64(pcm16.buffer)
+        ws.send(JSON.stringify({ type: 'audio', data: b64 }))
+      }
+
+      source.connect(processor)
+      processor.connect(ctx.destination)
+      setPhase('listening')
     } catch (err) {
-      console.error('[VoiceScreen] could not start recognition:', err)
+      console.error('[VoiceScreen] mic error:', err)
+      setPhase('idle')
     }
-  }, [sendToAgent, phase])
+  }, [])
+
+  const stopMic = useCallback(() => {
+    if (scriptNodeRef.current) {
+      try { scriptNodeRef.current.disconnect() } catch (_) { /* noop */ }
+      scriptNodeRef.current = null
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(t => t.stop())
+      micStreamRef.current = null
+    }
+  }, [])
+
+  // WebSocket lifecycle
+  useEffect(() => {
+    setPhase('connecting')
+    const ws = new WebSocket(WS_URL)
+    wsRef.current = ws
+
+    ws.onopen = () => {
+      console.log('[VoiceScreen] WebSocket connected')
+      // Wait for "ready" message from spine before transitioning
+    }
+
+    ws.onmessage = (event) => {
+      let msg
+      try { msg = JSON.parse(event.data) } catch (_) { return }
+
+      switch (msg.type) {
+        case 'ready':
+          setPhase('idle')
+          break
+
+        case 'audio':
+          setPhase('speaking')
+          enqueueAudioChunk(msg.data)
+          break
+
+        case 'input_transcript': {
+          const text = msg.text || ''
+          if (msg.finished) {
+            // Finalize user message
+            if (pendingUserMsgRef.current !== null) {
+              setMessages(prev => {
+                const updated = [...prev]
+                updated[pendingUserMsgRef.current] = {
+                  ...updated[pendingUserMsgRef.current],
+                  text,
+                }
+                return updated
+              })
+              pendingUserMsgRef.current = null
+            } else {
+              setMessages(prev => [...prev, { from: 'user', text }])
+            }
+          } else {
+            // Streaming partial - update in place
+            if (pendingUserMsgRef.current !== null) {
+              setMessages(prev => {
+                const updated = [...prev]
+                updated[pendingUserMsgRef.current] = {
+                  ...updated[pendingUserMsgRef.current],
+                  text,
+                }
+                return updated
+              })
+            } else {
+              setMessages(prev => {
+                pendingUserMsgRef.current = prev.length
+                return [...prev, { from: 'user', text }]
+              })
+            }
+          }
+          break
+        }
+
+        case 'output_transcript': {
+          const text = msg.text || ''
+          if (msg.finished) {
+            if (pendingAgentMsgRef.current !== null) {
+              setMessages(prev => {
+                const updated = [...prev]
+                updated[pendingAgentMsgRef.current] = {
+                  ...updated[pendingAgentMsgRef.current],
+                  text,
+                }
+                return updated
+              })
+              pendingAgentMsgRef.current = null
+            } else {
+              setMessages(prev => [...prev, { from: 'agent', text, tools: [] }])
+            }
+          } else {
+            if (pendingAgentMsgRef.current !== null) {
+              setMessages(prev => {
+                const updated = [...prev]
+                updated[pendingAgentMsgRef.current] = {
+                  ...updated[pendingAgentMsgRef.current],
+                  text,
+                }
+                return updated
+              })
+            } else {
+              setMessages(prev => {
+                pendingAgentMsgRef.current = prev.length
+                return [...prev, { from: 'agent', text, tools: [] }]
+              })
+            }
+          }
+          break
+        }
+
+        case 'tool_call': {
+          setPhase('thinking')
+          const toolName = msg.tool || 'tool'
+          // Attach tool badge to the current agent message
+          if (pendingAgentMsgRef.current !== null) {
+            setMessages(prev => {
+              const updated = [...prev]
+              const agentMsg = updated[pendingAgentMsgRef.current]
+              const tools = agentMsg.tools ? [...agentMsg.tools] : []
+              if (!tools.includes(toolName)) {
+                tools.push(toolName)
+              }
+              updated[pendingAgentMsgRef.current] = { ...agentMsg, tools }
+              return updated
+            })
+          } else {
+            // No agent message yet - create a placeholder
+            setMessages(prev => {
+              pendingAgentMsgRef.current = prev.length
+              return [...prev, { from: 'agent', text: '', tools: [toolName] }]
+            })
+          }
+          break
+        }
+
+        case 'turn_complete':
+          stopPlayback()
+          pendingAgentMsgRef.current = null
+          pendingUserMsgRef.current = null
+          setPhase('idle')
+          break
+
+        case 'interrupted':
+          stopPlayback()
+          setPhase('listening')
+          break
+
+        case 'error':
+          console.error('[VoiceScreen] spine error:', msg.message)
+          setMessages(prev => [...prev, {
+            from: 'agent',
+            text: msg.message || 'An error occurred.',
+            tools: [],
+          }])
+          setPhase('idle')
+          break
+
+        default:
+          break
+      }
+    }
+
+    ws.onerror = (err) => {
+      console.error('[VoiceScreen] WebSocket error:', err)
+      setPhase('idle')
+    }
+
+    ws.onclose = () => {
+      console.log('[VoiceScreen] WebSocket closed')
+      setPhase('connecting')
+    }
+
+    return () => {
+      ws.close()
+      wsRef.current = null
+    }
+  }, [enqueueAudioChunk, stopPlayback])
+
+  // Cleanup mic and audio context on unmount
+  useEffect(() => {
+    return () => {
+      stopMic()
+      stopPlayback()
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {})
+        audioCtxRef.current = null
+      }
+    }
+  }, [stopMic, stopPlayback])
 
   const handleOrbTap = useCallback(() => {
-    if (isListening) {
-      stopListening()
-    } else if (phase === 'speaking') {
-      // Stop TTS and go idle
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-      setPhase('idle')
-    } else {
-      startListening()
+    // Initialize AudioContext on first user gesture if needed
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
     }
-  }, [isListening, phase, startListening, stopListening])
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume()
+    }
+
+    if (phase === 'listening') {
+      stopMic()
+      setPhase('idle')
+    } else if (phase === 'speaking') {
+      stopPlayback()
+      setPhase('idle')
+    } else if (phase === 'idle') {
+      startMic()
+    }
+    // Do nothing if connecting or thinking
+  }, [phase, startMic, stopMic, stopPlayback])
 
   // Orb animation properties based on phase
   const getOrbGlow = () => {
@@ -267,6 +453,8 @@ function VoiceScreen({ onClose, customerId }) {
         return '0 0 24px rgba(15,60,201,0.35), 0 0 48px rgba(15,60,201,0.15)'
       case 'speaking':
         return '0 0 40px rgba(15,60,201,0.6), 0 0 80px rgba(15,60,201,0.25)'
+      case 'connecting':
+        return '0 0 12px rgba(15,60,201,0.15)'
       default:
         return '0 0 16px rgba(15,60,201,0.2)'
     }
@@ -292,6 +480,7 @@ function VoiceScreen({ onClose, customerId }) {
 
   const getStatusText = () => {
     switch (phase) {
+      case 'connecting': return 'Connecting...'
       case 'listening': return 'Listening...'
       case 'thinking': return 'Thinking...'
       case 'speaking': return 'Buddy is speaking...'
@@ -329,7 +518,7 @@ function VoiceScreen({ onClose, customerId }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0 8px' }}>
         <div
           onClick={handleOrbTap}
-          style={{ width: 72, height: 72, position: 'relative', cursor: 'pointer' }}
+          style={{ width: 72, height: 72, position: 'relative', cursor: phase === 'connecting' ? 'default' : 'pointer' }}
         >
           {/* Outer glow ring */}
           <div style={{
@@ -350,6 +539,7 @@ function VoiceScreen({ onClose, customerId }) {
             boxShadow: getOrbGlow(),
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'box-shadow 0.4s ease',
+            opacity: phase === 'connecting' ? 0.6 : 1,
           }}>
             <span style={{
               fontSize: 16, fontWeight: 700, color: '#fff',
@@ -388,6 +578,16 @@ function VoiceScreen({ onClose, customerId }) {
                 animationDelay: `${i * 0.3}s`,
               }} />
             ))
+          ) : phase === 'connecting' ? (
+            [0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: 5, height: 5,
+                background: 'rgba(15,60,201,0.25)',
+                borderRadius: '50%',
+                animation: `pulse 1.8s ease-in-out infinite`,
+                animationDelay: `${i * 0.4}s`,
+              }} />
+            ))
           ) : (
             [0, 1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} style={{
@@ -410,7 +610,9 @@ function VoiceScreen({ onClose, customerId }) {
             textAlign: 'center', padding: '24px 16px',
             color: 'rgba(255,255,255,0.25)', fontSize: 11,
           }}>
-            Tap the orb and speak to start a conversation
+            {phase === 'connecting'
+              ? 'Connecting to assistant...'
+              : 'Tap the orb and speak to start a conversation'}
           </div>
         )}
         {messages.map((msg, i) => (
@@ -419,16 +621,18 @@ function VoiceScreen({ onClose, customerId }) {
             maxWidth: '85%',
             animation: 'fadeUp 0.3s ease',
           }}>
-            <div style={{
-              background: msg.from === 'user' ? 'rgba(77,123,255,0.2)' : 'rgba(255,255,255,0.06)',
-              border: msg.from === 'user' ? '1px solid rgba(77,123,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
-              color: msg.from === 'user' ? '#fff' : 'rgba(255,255,255,0.9)',
-              borderRadius: msg.from === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-              padding: '8px 12px',
-              fontSize: 11, lineHeight: 1.4, fontFamily: 'var(--font)',
-            }}>
-              {msg.text}
-            </div>
+            {msg.text && (
+              <div style={{
+                background: msg.from === 'user' ? 'rgba(77,123,255,0.2)' : 'rgba(255,255,255,0.06)',
+                border: msg.from === 'user' ? '1px solid rgba(77,123,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                color: msg.from === 'user' ? '#fff' : 'rgba(255,255,255,0.9)',
+                borderRadius: msg.from === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                padding: '8px 12px',
+                fontSize: 11, lineHeight: 1.4, fontFamily: 'var(--font)',
+              }}>
+                {msg.text}
+              </div>
+            )}
             {/* Tool call badges */}
             {msg.tools && msg.tools.length > 0 && (
               <div style={{
@@ -691,7 +895,6 @@ function HomeScreen({ onVoiceTap }) {
 /* ---------- main component ---------- */
 export default function IPhoneMockup() {
   const [voiceMode, setVoiceMode] = useState(false)
-  const [customerId] = useState('JIO-001')
   const app = SUB_APPS.home
 
   return (
@@ -751,7 +954,6 @@ export default function IPhoneMockup() {
         {voiceMode && (
           <VoiceScreen
             onClose={() => setVoiceMode(false)}
-            customerId={customerId}
           />
         )}
 
