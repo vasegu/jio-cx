@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jio Home Assistant — LiveKit</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d0d1a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    h1 { font-size: 18px; margin-bottom: 8px; color: #8899cc; }
+    #status { font-size: 13px; color: #667; margin-bottom: 24px; }
+    #pipeline { font-size: 11px; color: #445; margin-bottom: 16px; font-family: monospace; }
+    #connect-btn {
+      width: 80px; height: 80px; border-radius: 50%;
+      border: 2px solid #0F3CC9; background: transparent;
+      color: #0F3CC9; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    #connect-btn:hover { background: #0F3CC9; color: #fff; }
+    #connect-btn.active { background: #c93030; border-color: #c93030; color: #fff; }
+    #transcript {
+      margin-top: 24px; width: 320px; max-height: 300px;
+      overflow-y: auto; font-size: 12px; line-height: 1.6;
+      padding: 12px; background: #111; border-radius: 8px;
+    }
+    .user-msg { color: #8899cc; }
+    .agent-msg { color: #88cc99; }
+  </style>
+</head>
+<body>
+  <h1>Jio Home Assistant</h1>
+  <div id="pipeline">STT → LLM → TTS</div>
+  <div id="status">Click to connect</div>
+  <button id="connect-btn">Start</button>
+  <div id="transcript"></div>
+
+  <script type="module">
+    // LiveKit client SDK loaded from CDN for simplicity
+    // In production, this would be bundled with the React app
+    import {
+      Room,
+      RoomEvent,
+      Track,
+      ConnectionState,
+    } from 'https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.esm.mjs';
+
+    const LIVEKIT_URL = 'ws://localhost:7880';
+    const status = document.getElementById('status');
+    const btn = document.getElementById('connect-btn');
+    const transcript = document.getElementById('transcript');
+
+    let room = null;
+    let connected = false;
+
+    function addMessage(text, cls) {
+      const div = document.createElement('div');
+      div.className = cls;
+      div.textContent = text;
+      transcript.appendChild(div);
+      transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    async function getToken() {
+      // Generate token via local endpoint, or paste manually
+      try {
+        const resp = await fetch('http://localhost:8089/token');
+        const data = await resp.json();
+        return data.token;
+      } catch (e) {
+        return prompt('Paste a LiveKit token:\nlk token create --api-key devkey --api-secret secret --join --room jio-test --identity user1');
+      }
+    }
+
+    async function connect() {
+      if (connected && room) {
+        room.disconnect();
+        return;
+      }
+
+      status.textContent = 'Getting token...';
+      const token = await getToken();
+      if (!token) { status.textContent = 'No token'; return; }
+
+      room = new Room();
+
+      room.on(RoomEvent.Connected, () => {
+        status.textContent = 'Connected — speak';
+        btn.textContent = 'Stop';
+        btn.classList.add('active');
+        connected = true;
+      });
+
+      room.on(RoomEvent.Disconnected, () => {
+        status.textContent = 'Disconnected';
+        btn.textContent = 'Start';
+        btn.classList.remove('active');
+        connected = false;
+      });
+
+      // Play agent audio — attach remote tracks to an audio element
+      room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === Track.Kind.Audio) {
+          const el = track.attach();
+          el.id = 'agent-audio';
+          document.body.appendChild(el);
+          status.textContent = 'Agent connected — speak';
+          console.log('[LiveKit] Agent audio track attached');
+        }
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach(el => el.remove());
+      });
+
+      // Agent transcription events
+      room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+        for (const seg of segments) {
+          if (!seg.text?.trim()) continue;
+          const isAgent = participant?.identity?.startsWith('agent');
+          if (seg.final) {
+            addMessage(
+              (isAgent ? 'Agent: ' : 'You: ') + seg.text,
+              isAgent ? 'agent-msg' : 'user-msg'
+            );
+          }
+        }
+      });
+
+      status.textContent = 'Connecting...';
+      try {
+        await room.connect(LIVEKIT_URL, token);
+        // Publish local microphone
+        await room.localParticipant.setMicrophoneEnabled(true);
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+        console.error(e);
+      }
+    }
+
+    btn.addEventListener('click', connect);
+  </script>
+</body>
+</html>

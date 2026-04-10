@@ -1,0 +1,31 @@
+# LiveKit voice agent dependencies
+# Install: pip install -r requirements-livekit.txt
+
+# Core
+livekit-agents~=1.5
+
+# VAD
+livekit-plugins-silero~=1.5
+
+# STT options (install what you need)
+livekit-plugins-deepgram~=1.5
+livekit-plugins-sarvam~=1.5
+livekit-plugins-google~=1.5
+
+# TTS options
+# sarvam TTS included in livekit-plugins-sarvam above
+# livekit-plugins-elevenlabs~=1.5
+
+# LLM options
+livekit-plugins-openai~=1.5    # also provides Groq via .with_groq()
+# google LLM included in livekit-plugins-google above
+
+# LangGraph integration (Phase 2)
+livekit-plugins-langchain~=1.5
+langgraph>=0.2
+langchain-google-genai
+langchain-anthropic
+langchain-groq
+
+# Env
+python-dotenv
