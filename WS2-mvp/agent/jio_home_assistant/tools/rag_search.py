@@ -1,14 +1,21 @@
-"""RAG search tool - queries Vertex AI RAG corpus for Jio knowledge base."""
+"""RAG search tool - queries Vertex AI RAG corpus for Jio knowledge base.
+
+Uses lazy init to avoid conflicting with Agent Engine's own vertexai.init().
+"""
 
 import json
-import vertexai
-from vertexai import rag
 
-# RAG corpus in europe-west1 (different region from model in us-central1)
 RAG_CORPUS = "projects/896447499660/locations/europe-west1/ragCorpora/2305843009213693952"
+_rag_initialized = False
 
-# Init vertexai for RAG (europe-west1)
-vertexai.init(project="jiobuddy-492811", location="europe-west1")
+
+def _ensure_rag_init():
+    """Lazy init - only runs once, doesn't conflict with Agent Engine."""
+    global _rag_initialized
+    if not _rag_initialized:
+        import vertexai
+        vertexai.init(project="jiobuddy-492811", location="europe-west1")
+        _rag_initialized = True
 
 
 def jio_knowledge_search(query: str) -> str:
@@ -25,11 +32,13 @@ def jio_knowledge_search(query: str) -> str:
     Returns:
         relevant information from the Jio knowledge base
     """
+    _ensure_rag_init()
+    from vertexai import rag
+
     response = rag.retrieval_query(
         rag_resources=[rag.RagResource(rag_corpus=RAG_CORPUS)],
         text=query,
-        similarity_top_k=5,
-        vector_distance_threshold=0.5,
+        rag_retrieval_config=rag.RagRetrievalConfig(top_k=5),
     )
 
     if not response.contexts or not response.contexts.contexts:
