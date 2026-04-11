@@ -111,14 +111,14 @@ def get_llm():
     if provider == "langgraph":
         from llm_adapter import GraphLLMAdapter
         sys.path.insert(0, str(Path(__file__).parent.parent / "agent"))
-        from graph import build_graph
+        from graph import build_graph, _get_llm
         graph = build_graph(
             router_llm=os.getenv("ROUTER_LLM", "google"),
             agent_llm=os.getenv("AGENT_LLM", "google"),
-            synthesis_llm=os.getenv("SYNTHESIS_LLM", "google"),
         )
-        log.info("LLM: LangGraph with voice separation (router → agent → tools → synthesis)")
-        return GraphLLMAdapter(graph=graph)
+        synthesis_model = _get_llm(os.getenv("SYNTHESIS_LLM", "google"))
+        log.info("LLM: LangGraph brain + direct synthesis streaming")
+        return GraphLLMAdapter(graph=graph, synthesis_model=synthesis_model)
     elif provider == "google":
         from livekit.plugins import google
         return google.LLM(model="gemini-2.5-flash")

@@ -6,14 +6,15 @@ Also serves the test UI on http://localhost:8089/
 """
 
 import json
+import os
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 from livekit.api import AccessToken, VideoGrants
 
-API_KEY = "devkey"
-API_SECRET = "secret"
+API_KEY = os.environ.get("LIVEKIT_API_KEY", "devkey")
+API_SECRET = os.environ.get("LIVEKIT_API_SECRET", "secret")
 ROOM = "jio-test"
 PORT = 8089
 

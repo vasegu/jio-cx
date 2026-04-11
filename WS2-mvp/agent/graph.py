@@ -13,16 +13,20 @@ Graph structure:
 """
 
 import json
+import logging
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Annotated, Any, Literal, TypedDict
+
+log = logging.getLogger("jio-graph")
 
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, MessagesState, START, END, add_messages
 from langgraph.prebuilt import ToolNode
-from langgraph.types import StreamWriter
+# StreamWriter removed — synthesis moved to adapter for true streaming
 
 # Import tool implementations directly (bypass ADK __init__)
 TOOLS_DIR = Path(__file__).parent / "jio_home_assistant" / "tools"
@@ -160,19 +164,18 @@ def _get_llm(provider: str = "google"):
 def build_graph(
     router_llm: str = "google",
     agent_llm: str = "google",
-    synthesis_llm: str = "google",
 ):
     """Build the Jio Home Assistant graph with voice separation.
+
+    Graph ends at extract — synthesis happens in the adapter for true streaming.
 
     Args:
         router_llm: Provider for intent classification
         agent_llm: Provider for sub-agent reasoning + tool calling
-        synthesis_llm: Provider for voice synthesis (compute_output)
     """
 
     router_model = _get_llm(router_llm)
     agent_model = _get_llm(agent_llm).bind_tools(ALL_TOOLS)
-    synthesis_model = _get_llm(synthesis_llm)
 
     # --- Nodes ---
 
@@ -182,6 +185,7 @@ def build_graph(
         Internal reasoning — nothing reaches TTS.
         For greetings, sets voice_instructions directly.
         """
+        t0 = time.time()
         user_messages = [m for m in state["messages"] if isinstance(m, HumanMessage)]
         if not user_messages:
             return {
@@ -204,6 +208,8 @@ def build_graph(
 
         response = router_model.invoke(messages)
         classification = response.content.strip().lower()
+        dur = int((time.time() - t0) * 1000)
+        log.info(f"[TIMING] router: {dur}ms → {classification[:20]}")
 
         if "troubleshoot" in classification:
             return {"route": "troubleshoot"}
@@ -212,7 +218,6 @@ def build_graph(
         elif "complaint" in classification:
             return {"route": "complaint"}
         else:
-            # Greeting or unclassified — respond directly
             return {
                 "route": "",
                 "voice_instructions": "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband.",
@@ -225,6 +230,7 @@ def build_graph(
         Uses the route to select the right system prompt.
         Returns AIMessage (with tool_calls or final response).
         """
+        t0 = time.time()
         route = state.get("route", "troubleshoot")
         prompt_map = {
             "troubleshoot": TROUBLESHOOT_PROMPT,
@@ -243,6 +249,9 @@ def build_graph(
 
         messages = [SystemMessage(content=prompt)] + clean
         response = agent_model.invoke(messages)
+        dur = int((time.time() - t0) * 1000)
+        tc = len(response.tool_calls) if hasattr(response, 'tool_calls') and response.tool_calls else 0
+        log.info(f"[TIMING] agent({route}): {dur}ms, tool_calls={tc}")
         return {"messages": [response]}
 
     def should_use_tools(state: JioState) -> Literal["tools", "extract"]:
@@ -283,80 +292,22 @@ def build_graph(
                 except (json.JSONDecodeError, TypeError):
                     tool_data[msg.name] = msg.content
 
-        return {
-            "voice_instructions": agent_response or "I wasn't able to find an answer. Let me connect you with someone who can help.",
-            "voice_data": tool_data,
-        }
-
-    def compute_output(state: JioState, writer: StreamWriter):
-        """THE ONLY NODE THAT SPEAKS. Synthesizes voice_instructions through brand voice.
-
-        Streams tokens via writer() → stream_mode="custom" → TTS.
-        Also returns the full AIMessage for conversation history.
-        """
-        instructions = state.get("voice_instructions", "")
-        voice_data = state.get("voice_data", {})
-
-        if not instructions:
-            return {"messages": [AIMessage(content="How can I help you?")]}
-
-        # Detect language from conversation
-        last_user = ""
-        for msg in reversed(state["messages"]):
-            if isinstance(msg, HumanMessage):
-                last_user = msg.content
-                break
-
-        # Detect language from the FIRST user message (sets tone for whole conversation)
-        first_user = ""
-        for msg in state["messages"]:
-            if isinstance(msg, HumanMessage):
-                first_user = msg.content
-                break
-
-        synthesis_prompt = (
-            "You are the voice of Jio's home broadband assistant. "
-            "Your job is to speak the following response naturally.\n\n"
-            "CRITICAL RULES:\n"
-            "- LANGUAGE: The customer's first message was: \"{first_user}\". "
-            "Respond in the SAME language they used. If they spoke English, respond in English. "
-            "If Hindi, respond in Hindi. Do NOT switch languages between turns.\n"
-            "- LENGTH: Maximum 3-4 sentences. This is spoken aloud — long responses kill the experience. "
-            "Summarize, don't list everything. Mention 2-3 key highlights, then offer to go deeper.\n"
-            "- FORMAT: No markdown, no bullet points, no asterisks, no emojis, no numbered lists. "
-            "Pure spoken sentences with natural pauses (commas).\n"
-            "- TONE: Warm but efficient. Like a helpful friend, not a brochure.\n\n"
-            f"Customer just said: {last_user}\n\n"
-            f"What to communicate:\n{instructions[:1000]}\n"
-        ).format(first_user=first_user)
-
-        if voice_data:
-            # Only pass a brief summary of data, not the full dump
-            data_summary = json.dumps(voice_data, indent=2)[:800]
-            synthesis_prompt += f"\nKey data to reference (pick the most relevant facts):\n{data_summary}\n"
-
-        messages = [
-            SystemMessage(content=synthesis_prompt),
-            HumanMessage(content="Speak this response."),
-        ]
-
-        # Stream tokens via custom events so TTS starts immediately
-        full_response = ""
-        for chunk in synthesis_model.stream(messages):
-            token = chunk.content if hasattr(chunk, "content") else ""
-            if token:
-                full_response += token
-                writer(token)  # emit to stream_mode="custom" → TTS
-
-        return {"messages": [AIMessage(content=full_response)]}
+        # Only set voice_instructions if agent produced a response.
+        # If the router already set voice_instructions (greetings), don't overwrite.
+        result = {"voice_data": tool_data}
+        if agent_response:
+            result["voice_instructions"] = agent_response
+        elif not state.get("voice_instructions"):
+            result["voice_instructions"] = "I wasn't able to find an answer. Let me connect you with someone who can help."
+        return result
 
     # --- Routing ---
 
-    def route_from_router(state: JioState) -> Literal["agent", "compute_output"]:
+    def route_from_router(state: JioState) -> Literal["agent", "extract"]:
         route = state.get("route", "")
         if route in ("troubleshoot", "plan", "complaint"):
             return "agent"
-        return "compute_output"  # greeting — go straight to synthesis
+        return "extract"  # greeting — router already set voice_instructions
 
     # --- Build graph ---
 
@@ -368,14 +319,13 @@ def build_graph(
     graph.add_node("agent", agent_node)
     graph.add_node("tools", tool_node)
     graph.add_node("extract", extract_voice_state)
-    graph.add_node("compute_output", compute_output)
+    # No compute_output — synthesis happens in the adapter for true streaming
 
     graph.add_edge(START, "router")
     graph.add_conditional_edges("router", route_from_router)
     graph.add_conditional_edges("agent", should_use_tools)
-    graph.add_edge("tools", "agent")  # tool results loop back to agent
-    graph.add_edge("extract", "compute_output")
-    graph.add_edge("compute_output", END)
+    graph.add_edge("tools", "agent")
+    graph.add_edge("extract", END)
 
     return graph.compile()
 
