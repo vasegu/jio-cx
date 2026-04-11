@@ -95,7 +95,7 @@ def get_tts():
         return elevenlabs.TTS()
     elif provider == "google":
         from livekit.plugins import google
-        return google.TTS()
+        return google.TTS(timeout=30)
     else:
         raise ValueError(f"Unknown TTS_PROVIDER: {provider}")
 
