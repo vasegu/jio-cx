@@ -142,12 +142,10 @@ ALL_TOOLS = [
 # LLM factory
 # ---------------------------------------------------------------------------
 
-def _get_llm(provider: str = "google"):
+def _get_llm(provider: str = "google", model: str = None):
     if provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
-        # ChatGoogleGenerativeAI supports both Developer API and Vertex AI
-        # via GOOGLE_GENAI_USE_VERTEXAI env var (handled by google-genai SDK)
-        return ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+        return ChatGoogleGenerativeAI(model=model or "gemini-2.5-flash")
     elif provider == "groq":
         from langchain_groq import ChatGroq
         return ChatGroq(model="llama-3.3-70b-versatile")
@@ -174,8 +172,10 @@ def build_graph(
         agent_llm: Provider for sub-agent reasoning + tool calling
     """
 
-    router_model = _get_llm(router_llm)
-    agent_model = _get_llm(agent_llm).bind_tools(ALL_TOOLS)
+    # Flash-Lite for router (fast classification, no thinking overhead)
+    # Flash for agent (needs reasoning for tool selection)
+    router_model = _get_llm(router_llm, model="gemini-2.5-flash-lite")
+    agent_model = _get_llm(agent_llm, model="gemini-2.5-flash").bind_tools(ALL_TOOLS)
 
     # --- Nodes ---
 

@@ -111,13 +111,13 @@ def get_llm():
     if provider == "langgraph":
         from llm_adapter import GraphLLMAdapter
         sys.path.insert(0, str(Path(__file__).parent.parent / "agent"))
-        from graph import build_graph, _get_llm
+        from graph import build_graph
         graph = build_graph(
             router_llm=os.getenv("ROUTER_LLM", "google"),
             agent_llm=os.getenv("AGENT_LLM", "google"),
         )
-        synthesis_model = _get_llm(os.getenv("SYNTHESIS_LLM", "google"))
-        log.info("LLM: LangGraph brain + direct synthesis streaming")
+        synthesis_model = os.getenv("SYNTHESIS_MODEL", "gemini-2.5-flash-lite")
+        log.info(f"LLM: LangGraph brain + raw SDK synthesis ({synthesis_model})")
         return GraphLLMAdapter(graph=graph, synthesis_model=synthesis_model)
     elif provider == "google":
         from livekit.plugins import google
@@ -171,9 +171,7 @@ async def entrypoint(ctx: agents.JobContext):
         agent=JioHomeAssistant(),
     )
 
-    await session.generate_reply(
-        instructions="Greet the customer warmly. You are a Jio Home broadband assistant."
-    )
+    # No auto-greeting — wait for the customer to speak first
 
 
 if __name__ == "__main__":
