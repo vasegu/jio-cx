@@ -319,19 +319,36 @@ class JioHomeAssistant(Agent):
 # Entrypoint
 # ---------------------------------------------------------------------------
 
-server = AgentServer()
+server = AgentServer(num_idle_processes=1)
+
+
+def prewarm(proc: agents.JobProcess):
+    """Pre-load models and warm caches before any jobs arrive."""
+    from graph import build_graph, _get_llm
+
+    log.info("[PREWARM] Loading graph + models...")
+
+    proc.userdata["graph"] = build_graph(
+        router_llm=os.getenv("ROUTER_LLM", "google"),
+        agent_llm=os.getenv("AGENT_LLM", "google"),
+    )
+    proc.userdata["router_model"] = _get_llm("google", model="gemini-2.5-flash-lite")
+    proc.userdata["synthesis_llm"] = _get_llm("google", model="gemini-2.5-flash-lite")
+    proc.userdata["vad"] = silero.VAD.load()
+
+    log.info("[PREWARM] Done (graph + models loaded)")
+
+
+server.setup_fnc = prewarm
 
 
 @server.rtc_session()
 async def entrypoint(ctx: agents.JobContext):
-    from graph import build_graph, _get_llm
-
-    graph = build_graph(
-        router_llm=os.getenv("ROUTER_LLM", "google"),
-        agent_llm=os.getenv("AGENT_LLM", "google"),
-    )
-    router_model = _get_llm("google", model="gemini-2.5-flash-lite")
-    synthesis_llm = _get_llm("google", model="gemini-2.5-flash-lite")
+    # Use pre-loaded models from prewarm
+    graph = ctx.proc.userdata["graph"]
+    router_model = ctx.proc.userdata["router_model"]
+    synthesis_llm = ctx.proc.userdata["synthesis_llm"]
+    vad = ctx.proc.userdata["vad"]
 
     agent = JioHomeAssistant(graph, router_model, synthesis_llm)
 
@@ -342,7 +359,7 @@ async def entrypoint(ctx: agents.JobContext):
     session = AgentSession(
         stt=get_stt(),
         tts=get_tts(),
-        vad=silero.VAD.load(),
+        vad=vad,
         turn_handling=TurnHandlingOptions(
             turn_detection=MultilingualModel(),
             interruption={"mode": "adaptive"},
