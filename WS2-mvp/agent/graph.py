@@ -225,7 +225,22 @@ def build_graph(
         log.info(f"[TIMING] router: {dur}ms → {route or 'greeting'}")
 
         if route:
-            return {"route": route}
+            # Generate contextual filler — spoken immediately while graph thinks
+            t_filler = time.time()
+            filler = router_model.invoke([
+                SystemMessage(content=(
+                    "Generate ONLY a brief acknowledgment under 8 words. "
+                    "Do NOT answer the question. Just acknowledge you heard it. "
+                    "Match the customer's language."
+                )),
+                HumanMessage(content=f"Customer said: {last_text}. Topic: {route}"),
+            ])
+            filler_dur = int((time.time() - t_filler) * 1000)
+            filler_text = filler.content.strip()
+            log.info(f"[TIMING] filler LLM: {filler_dur}ms → {filler_text[:40]}")
+            return {"route": route, "voice_instructions": filler_text}
+
+        # Greeting — voice_instructions IS the full response (synthesised by adapter)
         return {
             "route": "",
             "voice_instructions": "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband.",
@@ -330,11 +345,11 @@ def build_graph(
     # No compute_output — synthesis happens in the adapter for true streaming
 
     def should_route(state: JioState) -> Literal["router", "agent", "extract"]:
-        """Skip router if route is pre-set by adapter (filler flow)."""
+        """Skip router if route is pre-set by llm_node."""
         route = state.get("route", "")
         if route in ("troubleshoot", "plan", "complaint"):
             return "agent"
-        elif route == "greeting_direct":
+        elif route:  # any other non-empty (e.g. greeting with voice_instructions set)
             return "extract"
         return "router"
 
