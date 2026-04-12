@@ -135,7 +135,7 @@ class JioHomeAssistant(Agent):
         t_start = time.time()
 
         # Thread/turn IDs for LangSmith
-        room_id = self.session.room.name if self.session and self.session.room else "unknown"
+        room_id = str(id(self.session)) if self.session else "unknown"
         thread_meta = {"thread_id": room_id}
         turn_id = f"{room_id}-{int(t_start)}"
 
@@ -162,9 +162,12 @@ class JioHomeAssistant(Agent):
                 vi = update.get("voice_instructions", "")
                 vd = update.get("voice_data")
 
+                # Check route to distinguish filler from greeting instructions
+                route = update.get("route", "")
+
                 if vi and vi != final_vi:
-                    if not filler_text and node_name == "router":
-                        # First voice_instructions from router = filler
+                    if not filler_text and node_name == "router" and route in ("troubleshoot", "plan", "complaint"):
+                        # Filler from router for sub-agent routes — yield immediately
                         filler_text = vi
                         elapsed = int((time.time() - t_start) * 1000)
                         log.info(f"[TIMING] filler from router at {elapsed}ms: {vi[:40]}")
