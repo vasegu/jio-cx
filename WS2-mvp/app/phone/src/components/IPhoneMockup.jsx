@@ -100,6 +100,7 @@ import {
   useRoomContext,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
+import { RoomEvent } from 'livekit-client'
 
 /* ---------- Audio helpers ---------- */
 function floatTo16BitPCM(float32Array) {
@@ -181,7 +182,9 @@ function VoiceContent({ onClose }) {
   const pendingUserMsgRef = useRef(null)
   const pendingAgentMsgRef = useRef(null)
 
-  const { state: agentState, audioTrack } = useVoiceAssistant()
+  const agent = useVoiceAssistant()
+  const agentState = agent?.state || 'connecting'
+  const audioTrack = agent?.audioTrack
   const room = useRoomContext()
 
   // Map agent state to our phase
@@ -201,7 +204,6 @@ function VoiceContent({ onClose }) {
   // Transcription handling via room events
   useEffect(() => {
     if (!room) return
-    const { RoomEvent } = require('livekit-client')
 
     const handler = (segments, participant) => {
       const isAgent = participant?.identity?.startsWith('agent')
