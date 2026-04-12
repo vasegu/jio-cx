@@ -88,8 +88,11 @@ const SERVICES = [
   { key: 'shopping', title: 'SHOPPING', sub: 'Best deals', color: '#EFA73D' },
 ]
 
-/* ---------- WebSocket URL ---------- */
-const WS_URL = 'ws://localhost:9090'
+/* ---------- LiveKit config ---------- */
+const LIVEKIT_URL = 'wss://jiobuddy-y3inkf8x.livekit.cloud'
+const TOKEN_URL = 'http://localhost:8089/token'
+
+import { Room, RoomEvent, Track, ConnectionState } from 'livekit-client'
 
 /* ---------- Audio helpers ---------- */
 function floatTo16BitPCM(float32Array) {
@@ -127,20 +130,12 @@ function base64ToArrayBuffer(base64) {
   return bytes.buffer
 }
 
-/* ---------- VoiceScreen (live agent via WebSocket) ---------- */
+/* ---------- VoiceScreen (live agent via LiveKit) ---------- */
 function VoiceScreen({ onClose }) {
   const [messages, setMessages] = useState([])
   const [phase, setPhase] = useState('connecting') // connecting | idle | listening | thinking | speaking
   const scrollRef = useRef(null)
-  const wsRef = useRef(null)
-  const captureCtxRef = useRef(null)  // 16kHz for mic capture
-  const playbackCtxRef = useRef(null) // 24kHz for audio playback
-  const micStreamRef = useRef(null)
-  const scriptNodeRef = useRef(null)
-  const sourceNodeRef = useRef(null)
-  const playbackQueueRef = useRef([])
-  const isPlayingRef = useRef(false)
-  const nextPlayTimeRef = useRef(0)  // scheduled time for next chunk
+  const roomRef = useRef(null)
   const pendingUserMsgRef = useRef(null)
   const pendingAgentMsgRef = useRef(null)
 
@@ -151,288 +146,142 @@ function VoiceScreen({ onClose }) {
     }
   }, [messages])
 
-  // Ensure playback AudioContext at 24kHz
-  const getPlaybackCtx = useCallback(() => {
-    if (!playbackCtxRef.current) {
-      playbackCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 })
-    }
-    if (playbackCtxRef.current.state === 'suspended') {
-      playbackCtxRef.current.resume()
-    }
-    return playbackCtxRef.current
-  }, [])
-
-  // Schedule audio chunks with precise timing - no gaps between chunks
-  const enqueueAudioChunk = useCallback((base64Data) => {
-    const ctx = getPlaybackCtx()
-    const raw = base64ToArrayBuffer(base64Data)
-    const int16 = new Int16Array(raw)
-    const float32 = int16ToFloat32(int16)
-    const audioBuffer = ctx.createBuffer(1, float32.length, 24000)
-    audioBuffer.copyToChannel(float32, 0)
-
-    const now = ctx.currentTime
-    // Schedule this chunk right after the last one ends
-    const startTime = Math.max(now, nextPlayTimeRef.current)
-    nextPlayTimeRef.current = startTime + audioBuffer.duration
-
-    const source = ctx.createBufferSource()
-    source.buffer = audioBuffer
-    source.connect(ctx.destination)
-    source.start(startTime)
-    sourceNodeRef.current = source
-    isPlayingRef.current = true
-
-    // When this chunk ends, check if more are coming
-    source.onended = () => {
-      // If no more chunks scheduled after this, we're done
-      if (ctx.currentTime >= nextPlayTimeRef.current - 0.05) {
-        isPlayingRef.current = false
-        setPhase(prev => prev === 'speaking' ? 'listening' : prev)
-      }
-    }
-  }, [getPlaybackCtx])
-
-  const stopPlayback = useCallback(() => {
-    playbackQueueRef.current = []
-    nextPlayTimeRef.current = 0
-    if (sourceNodeRef.current) {
-      try { sourceNodeRef.current.stop() } catch (_) { /* noop */ }
-      sourceNodeRef.current = null
-    }
-    isPlayingRef.current = false
-  }, [])
-
-  // Start capturing microphone audio and streaming over WebSocket
-  const startMic = useCallback(async () => {
-    if (micStreamRef.current) return // already capturing
-
-    // Create capture AudioContext at 16kHz (separate from playback at 24kHz)
-    if (!captureCtxRef.current) {
-      captureCtxRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
-    }
-    const ctx = captureCtxRef.current
-    if (ctx.state === 'suspended') await ctx.resume()
-
-    // Also init playback context on this user gesture
-    getPlaybackCtx()
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { sampleRate: 16000, channelCount: 1 },
-      })
-      micStreamRef.current = stream
-
-      const source = ctx.createMediaStreamSource(stream)
-      const processor = ctx.createScriptProcessor(2048, 1, 1) // smaller buffer = lower latency
-      scriptNodeRef.current = processor
-
-      processor.onaudioprocess = (e) => {
-        const ws = wsRef.current
-        if (!ws || ws.readyState !== WebSocket.OPEN) return
-        const inputData = e.inputBuffer.getChannelData(0)
-        const pcm16 = floatTo16BitPCM(inputData)
-        const b64 = arrayBufferToBase64(pcm16.buffer)
-        ws.send(JSON.stringify({ type: 'audio', data: b64 }))
-      }
-
-      source.connect(processor)
-      processor.connect(ctx.destination)
-      setPhase('listening')
-    } catch (err) {
-      console.error('[VoiceScreen] mic error:', err)
-      setPhase('idle')
-    }
-  }, [getPlaybackCtx])
-
-  const stopMic = useCallback(() => {
-    if (scriptNodeRef.current) {
-      try { scriptNodeRef.current.disconnect() } catch (_) { /* noop */ }
-      scriptNodeRef.current = null
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach(t => t.stop())
-      micStreamRef.current = null
-    }
-  }, [])
-
-  // Stable refs for callbacks so WebSocket effect has zero deps
-  const enqueueAudioChunkRef = useRef(enqueueAudioChunk)
-  const stopPlaybackRef = useRef(stopPlayback)
-  const startMicRef = useRef(startMic)
-  useEffect(() => { enqueueAudioChunkRef.current = enqueueAudioChunk }, [enqueueAudioChunk])
-  useEffect(() => { stopPlaybackRef.current = stopPlayback }, [stopPlayback])
-  useEffect(() => { startMicRef.current = startMic }, [startMic])
-
-  // WebSocket lifecycle — runs exactly once on mount, never re-creates
+  // LiveKit Room lifecycle
   useEffect(() => {
-    setPhase('connecting')
-    const ws = new WebSocket(WS_URL)
-    wsRef.current = ws
+    let room = null
 
-    ws.onopen = () => {
-      console.log('[VoiceScreen] WebSocket connected')
-    }
-
-    ws.onmessage = (event) => {
-      let msg
-      try { msg = JSON.parse(event.data) } catch (_) { return }
-
-      switch (msg.type) {
-        case 'ready':
-          startMicRef.current()
-          break
-
-        case 'audio':
-          setPhase('speaking')
-          enqueueAudioChunkRef.current(msg.data)
-          break
-
-        case 'input_transcript': {
-          const newText = msg.text || ''
-          if (!newText.trim()) break
-          if (pendingUserMsgRef.current !== null) {
-            setMessages(prev => {
-              const updated = [...prev]
-              const existing = updated[pendingUserMsgRef.current]
-              const updatedText = newText.length >= (existing.text || '').length
-                ? newText
-                : existing.text + ' ' + newText
-              updated[pendingUserMsgRef.current] = { ...existing, text: updatedText.trim() }
-              return updated
-            })
-          } else {
-            setMessages(prev => {
-              pendingUserMsgRef.current = prev.length
-              return [...prev, { from: 'user', text: newText }]
-            })
-          }
-          if (msg.finished) {
-            pendingUserMsgRef.current = null
-          }
-          break
-        }
-
-        case 'output_transcript': {
-          const newText = msg.text || ''
-          if (!newText.trim()) break
-          if (pendingAgentMsgRef.current !== null) {
-            setMessages(prev => {
-              const updated = [...prev]
-              const existing = updated[pendingAgentMsgRef.current]
-              const updatedText = newText.length >= (existing.text || '').length
-                ? newText
-                : existing.text + ' ' + newText
-              updated[pendingAgentMsgRef.current] = { ...existing, text: updatedText.trim() }
-              return updated
-            })
-          } else {
-            setMessages(prev => {
-              pendingAgentMsgRef.current = prev.length
-              return [...prev, { from: 'agent', text: newText, tools: [] }]
-            })
-          }
-          if (msg.finished) {
-            pendingAgentMsgRef.current = null
-          }
-          break
-        }
-
-        case 'tool_call': {
-          setPhase('thinking')
-          const toolName = msg.tool || 'tool'
-          if (pendingAgentMsgRef.current !== null) {
-            setMessages(prev => {
-              const updated = [...prev]
-              const agentMsg = updated[pendingAgentMsgRef.current]
-              const tools = agentMsg.tools ? [...agentMsg.tools] : []
-              if (!tools.includes(toolName)) {
-                tools.push(toolName)
-              }
-              updated[pendingAgentMsgRef.current] = { ...agentMsg, tools }
-              return updated
-            })
-          } else {
-            setMessages(prev => {
-              pendingAgentMsgRef.current = prev.length
-              return [...prev, { from: 'agent', text: '', tools: [toolName] }]
-            })
-          }
-          break
-        }
-
-        case 'turn_complete':
-          if (!isPlayingRef.current) {
-            setPhase('listening')
-          }
-          break
-
-        case 'interrupted':
-          stopPlaybackRef.current()
-          setPhase('listening')
-          break
-
-        case 'error':
-          console.error('[VoiceScreen] spine error:', msg.message)
-          setMessages(prev => [...prev, {
-            from: 'agent',
-            text: msg.message || 'An error occurred.',
-            tools: [],
-          }])
-          setPhase('idle')
-          break
-
-        default:
-          break
-      }
-    }
-
-    ws.onerror = (err) => {
-      console.error('[VoiceScreen] WebSocket error:', err)
-      setPhase('idle')
-    }
-
-    ws.onclose = () => {
-      console.log('[VoiceScreen] WebSocket closed')
+    async function connect() {
       setPhase('connecting')
+      try {
+        // Get token from token server
+        const resp = await fetch(TOKEN_URL)
+        const { token } = await resp.json()
+
+        room = new Room()
+        roomRef.current = room
+
+        // Agent audio — attach to play automatically
+        room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
+          console.log('[VoiceScreen] Track subscribed:', track.kind, participant?.identity)
+          if (track.kind === Track.Kind.Audio) {
+            const el = track.attach()
+            el.id = 'agent-audio'
+            document.body.appendChild(el)
+            console.log('[VoiceScreen] Agent audio attached')
+            setPhase('speaking')
+          }
+        })
+
+        room.on(RoomEvent.TrackUnsubscribed, (track) => {
+          track.detach().forEach(el => el.remove())
+        })
+
+        // Participant events
+        room.on(RoomEvent.ParticipantConnected, (participant) => {
+          console.log('[VoiceScreen] Participant joined:', participant.identity)
+        })
+
+        // Agent state
+        room.on(RoomEvent.RoomMetadataChanged, (metadata) => {
+          console.log('[VoiceScreen] Room metadata:', metadata)
+        })
+
+        // Transcription events — LiveKit provides these natively
+        room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+          console.log('[VoiceScreen] Transcription:', participant?.identity, segments.length, 'segments')
+          const isAgent = participant?.identity?.startsWith('agent')
+          for (const seg of segments) {
+            const text = seg.text?.trim()
+            if (!text) continue
+
+            if (isAgent) {
+              if (seg.final) {
+                // Final agent transcript — create/update message
+                setMessages(prev => [...prev, { from: 'agent', text, tools: [] }])
+                pendingAgentMsgRef.current = null
+              } else {
+                // Incremental agent transcript
+                if (pendingAgentMsgRef.current !== null) {
+                  setMessages(prev => {
+                    const updated = [...prev]
+                    updated[pendingAgentMsgRef.current] = { ...updated[pendingAgentMsgRef.current], text }
+                    return updated
+                  })
+                } else {
+                  setMessages(prev => {
+                    pendingAgentMsgRef.current = prev.length
+                    return [...prev, { from: 'agent', text, tools: [] }]
+                  })
+                }
+              }
+            } else {
+              if (seg.final) {
+                setMessages(prev => [...prev, { from: 'user', text }])
+                pendingUserMsgRef.current = null
+              } else {
+                if (pendingUserMsgRef.current !== null) {
+                  setMessages(prev => {
+                    const updated = [...prev]
+                    updated[pendingUserMsgRef.current] = { ...updated[pendingUserMsgRef.current], text }
+                    return updated
+                  })
+                } else {
+                  setMessages(prev => {
+                    pendingUserMsgRef.current = prev.length
+                    return [...prev, { from: 'user', text }]
+                  })
+                }
+              }
+            }
+          }
+        })
+
+        // Agent state changes
+        room.on(RoomEvent.ConnectionStateChanged, (state) => {
+          if (state === ConnectionState.Connected) {
+            setPhase('listening')
+          } else if (state === ConnectionState.Disconnected) {
+            setPhase('connecting')
+          }
+        })
+
+        await room.connect(LIVEKIT_URL, token)
+        console.log('[VoiceScreen] Connected to room')
+        // Small delay to let WebRTC settle before publishing mic
+        await new Promise(r => setTimeout(r, 500))
+        await room.localParticipant.setMicrophoneEnabled(true)
+        console.log('[VoiceScreen] Mic enabled')
+        setPhase('listening')
+      } catch (err) {
+        console.error('[VoiceScreen] connect error:', err)
+        setPhase('idle')
+      }
     }
 
-    return () => {
-      ws.close()
-      wsRef.current = null
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // empty deps — WebSocket created once, callbacks accessed via refs
+    connect()
 
-  // Cleanup mic and audio contexts on unmount
-  useEffect(() => {
     return () => {
-      stopMic()
-      stopPlayback()
-      if (captureCtxRef.current) {
-        captureCtxRef.current.close().catch(() => {})
-        captureCtxRef.current = null
+      if (roomRef.current) {
+        roomRef.current.disconnect()
+        roomRef.current = null
       }
-      if (playbackCtxRef.current) {
-        playbackCtxRef.current.close().catch(() => {})
-        playbackCtxRef.current = null
-      }
+      // Remove any agent audio elements
+      document.querySelectorAll('#agent-audio').forEach(el => el.remove())
     }
-  }, [stopMic, stopPlayback])
+  }, [])
 
   const handleOrbTap = useCallback(() => {
+    const room = roomRef.current
+    if (!room) return
     if (phase === 'listening') {
-      stopMic()
+      room.localParticipant.setMicrophoneEnabled(false)
       setPhase('idle')
-    } else if (phase === 'speaking') {
-      stopPlayback()
-      setPhase('listening')
-      startMic()
     } else if (phase === 'idle') {
-      startMic()
+      room.localParticipant.setMicrophoneEnabled(true)
+      setPhase('listening')
     }
-    // Do nothing if connecting or thinking
-  }, [phase, startMic, stopMic, stopPlayback])
+    // Do nothing if connecting, thinking, or speaking
+  }, [phase])
 
   // Orb animation properties based on phase
   const getOrbGlow = () => {
