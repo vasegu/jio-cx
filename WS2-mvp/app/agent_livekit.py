@@ -121,12 +121,14 @@ class JioHomeAssistant(Agent):
     def __init__(self, graph, router_model, synthesis_llm):
         super().__init__(
             instructions=SYSTEM_PROMPT,
-            # LLM required for pipeline to call llm_node — we override the node itself
             llm="google/gemini-2.5-flash-lite",
         )
         self.graph = graph
         self.router_model = router_model
         self.synthesis_llm = synthesis_llm
+        # Stable thread ID for LangSmith grouping across turns
+        from langsmith import utils as ls_utils
+        self._thread_id = str(ls_utils.uuid7()) if hasattr(ls_utils, 'uuid7') else str(id(self))
 
     async def llm_node(
         self,
@@ -137,7 +139,9 @@ class JioHomeAssistant(Agent):
         """yield filler → astream graph → yield synthesis."""
         import queue
         from graph import classify_intent
+        from langsmith import traceable
         t_start = time.time()
+        thread_meta = {"thread_id": self._thread_id}
 
         state = self._build_state(chat_ctx)
         last_user = ""
@@ -151,9 +155,8 @@ class JioHomeAssistant(Agent):
             return
 
         # 1. Classify intent (Flash-Lite, ~300ms)
-        from langsmith import traceable
         t_route = time.time()
-        _classify = traceable(name="classify_intent")(classify_intent)
+        _classify = traceable(name="classify_intent", metadata=thread_meta)(classify_intent)
         route = await asyncio.get_event_loop().run_in_executor(
             None, _classify, last_user, self.router_model
         )
@@ -175,9 +178,9 @@ class JioHomeAssistant(Agent):
                 lambda: self.router_model.invoke(
                     [
                         SystemMessage(content=FILLER_PROMPT),
-                        HumanMessage(content=f"Customer asking about: {topic_label}"),
+                        HumanMessage(content=f"Customer said: \"{last_user}\". Topic: {topic_label}."),
                     ],
-                    config={"run_name": "generate_filler"},
+                    config={"run_name": "generate_filler", "metadata": thread_meta},
                 )
             )
             filler_text = filler_response.content.strip()
@@ -203,8 +206,7 @@ class JioHomeAssistant(Agent):
             state["voice_instructions"] = "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband."
 
         # LangSmith thread grouping
-        session_id = str(id(self.session))
-        config = {"metadata": {"session_id": session_id, "thread_id": session_id}}
+        config = {"metadata": thread_meta}
 
         # Start with voice_instructions from state (greeting case sets it before graph)
         final_vi = state.get("voice_instructions", "")
@@ -242,7 +244,7 @@ class JioHomeAssistant(Agent):
         token_count = 0
         q: queue.Queue[str | None] = queue.Queue()
 
-        @traceable(name="voice_synthesis")
+        @traceable(name="voice_synthesis", metadata=thread_meta)
         def _produce():
             try:
                 for chunk in self.synthesis_llm.stream(messages):
