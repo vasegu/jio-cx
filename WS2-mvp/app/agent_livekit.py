@@ -35,8 +35,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from livekit import agents
-from livekit.agents import AgentSession, Agent, AgentServer
+from livekit.agents import AgentSession, Agent, AgentServer, TurnHandlingOptions
 from livekit.plugins import silero
+from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 load_dotenv(Path(__file__).parent.parent / "agent" / ".env")
 load_dotenv(Path(__file__).parent / ".env.local")
@@ -95,7 +96,7 @@ def get_tts():
         return elevenlabs.TTS()
     elif provider == "google":
         from livekit.plugins import google
-        return google.TTS(timeout=30)
+        return google.TTS()
     else:
         raise ValueError(f"Unknown TTS_PROVIDER: {provider}")
 
@@ -111,14 +112,19 @@ def get_llm():
     if provider == "langgraph":
         from llm_adapter import GraphLLMAdapter
         sys.path.insert(0, str(Path(__file__).parent.parent / "agent"))
-        from graph import build_graph
+        from graph import build_graph, _get_llm
         graph = build_graph(
             router_llm=os.getenv("ROUTER_LLM", "google"),
             agent_llm=os.getenv("AGENT_LLM", "google"),
         )
+        router_model = _get_llm("google", model="gemini-2.5-flash-lite")
         synthesis_model = os.getenv("SYNTHESIS_MODEL", "gemini-2.5-flash-lite")
-        log.info(f"LLM: LangGraph brain + raw SDK synthesis ({synthesis_model})")
-        return GraphLLMAdapter(graph=graph, synthesis_model=synthesis_model)
+        log.info(f"LLM: LangGraph brain + filler + raw SDK synthesis ({synthesis_model})")
+        return GraphLLMAdapter(
+            graph=graph,
+            synthesis_model=synthesis_model,
+            router_model=router_model,
+        )
     elif provider == "google":
         from livekit.plugins import google
         return google.LLM(model="gemini-2.5-flash")
@@ -164,6 +170,10 @@ async def entrypoint(ctx: agents.JobContext):
         llm=llm,
         tts=tts,
         vad=silero.VAD.load(),
+        turn_handling=TurnHandlingOptions(
+            turn_detection=MultilingualModel(),
+            interruption={"mode": "adaptive"},
+        ),
     )
 
     await session.start(

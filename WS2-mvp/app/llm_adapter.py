@@ -1,9 +1,12 @@
-"""LLM adapter: graph thinks, adapter speaks.
+"""LLM adapter: route fast → filler → graph thinks → synthesis speaks.
 
-The graph (router → agent → tools → extract) runs via ainvoke().
-The adapter then streams synthesis using the raw Google GenAI SDK
-(not LangChain — their async streaming is broken for Google models).
-True token-by-token streaming to LiveKit's TTS pipeline.
+Flow:
+1. Classify intent via router LLM (~300ms)
+2. Emit hardcoded filler to TTS immediately ("Sure, let me pull up our plans")
+3. Run full graph with pre-set route (agent + tools + extract, ~3s)
+4. Stream synthesis via raw SDK to TTS (token-by-token, ~500ms TTFT)
+
+User hears filler in ~500ms. Real answer follows ~3-5s later.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+import queue
 import time
 from typing import Any
 
@@ -31,25 +35,36 @@ from livekit.agents.types import (
 
 log = logging.getLogger("jio-adapter")
 
+# Hardcoded filler by route — no LLM, zero latency, predictable
+FILLER_BY_ROUTE = {
+    "plan": "Sure, let me pull up our plans.",
+    "troubleshoot": "Okay, let me run some checks.",
+    "complaint": "I understand. Let me look into this.",
+}
+
+# Synthesis prompt — voice-optimized, following:
+# LiveKit prompting guide, awesome-voice-prompts, MasterPrompting, ElevenLabs guide
 SYNTHESIS_PROMPT = (
-    "You are the voice of Jio's home broadband assistant. "
-    "Your job is to speak the following response naturally.\n\n"
-    "CRITICAL RULES:\n"
-    "- LANGUAGE: The customer's first message was: \"{first_user}\". "
-    "Respond in the SAME language they used. If they spoke English, respond in English. "
-    "If Hindi, respond in Hindi. Do NOT switch languages between turns.\n"
-    "- LENGTH: Maximum 3-4 sentences. This is spoken aloud — long responses kill the experience. "
-    "Summarize, don't list everything. Mention 2-3 key highlights, then offer to go deeper.\n"
-    "- FORMAT: No markdown, no bullet points, no asterisks, no emojis, no numbered lists. "
-    "Pure spoken sentences with natural pauses (commas).\n"
-    "- TONE: Warm but efficient. Like a helpful friend, not a brochure.\n\n"
-    "Customer just said: {last_user}\n\n"
+    "You are a Jio Home broadband assistant speaking on a phone call.\n\n"
+    "HARD RULES:\n"
+    "- Maximum 2 sentences. Under 40 words total. No exceptions.\n"
+    "- NEVER use markdown, bullet points, asterisks, numbered lists, or emojis.\n"
+    "- NEVER say \"I'd be happy to\", \"absolutely\", \"great question\", \"certainly\", \"definitely\".\n"
+    "- All numbers in word form: \"five ninety nine rupees per month\" not \"₹599/month\".\n"
+    "- All abbreviations spelled out: \"M B P S\" not \"Mbps\".\n"
+    "- End with a question or clear invitation: \"Want details on any of these?\"\n"
+    "- Match the customer's language. If they spoke English, respond in English.\n\n"
+    "PERSONALITY (hearable, not described):\n"
+    "- Start responses with natural markers: \"So\", \"Okay so\", \"Right\"\n"
+    "- Use contractions: \"you'll get\" not \"you will get\"\n"
+    "- One acknowledgment max, then answer. No preamble.\n\n"
+    "Customer said: {last_user}\n\n"
     "What to communicate:\n{instructions}\n"
 )
 
 
 def _create_genai_client():
-    """Create a Google GenAI client, using Vertex AI if configured."""
+    """Create a Google GenAI client for synthesis streaming."""
     from google import genai
     if os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").upper() == "TRUE":
         return genai.Client(
@@ -60,21 +75,8 @@ def _create_genai_client():
     return genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
-def _sync_stream_synthesis(client, model: str, prompt: str):
-    """Synchronous generator that yields text chunks from the GenAI SDK.
-    Called via asyncio.to_thread for true streaming in async context.
-    """
-    for chunk in client.models.generate_content_stream(
-        model=model,
-        contents=prompt,
-    ):
-        text = chunk.text if hasattr(chunk, "text") else ""
-        if text:
-            yield text
-
-
 class GraphLLMStream(llm.LLMStream):
-    """Graph thinks (ainvoke), then synthesis streams directly to TTS."""
+    """Route fast → filler → graph thinks → synthesis speaks."""
 
     def __init__(
         self,
@@ -89,6 +91,7 @@ class GraphLLMStream(llm.LLMStream):
         super().__init__(llm_instance, chat_ctx=chat_ctx, tools=tools, conn_options=conn_options)
         self._graph = graph
         self._config = config
+        self._router_model = llm_instance._router_model
         self._genai_client = llm_instance._genai_client
         self._synthesis_model = llm_instance._synthesis_model
 
@@ -96,45 +99,74 @@ class GraphLLMStream(llm.LLMStream):
         state = self._chat_ctx_to_state()
         t_start = time.time()
 
-        # Phase 1: Graph thinks (silent — no output to TTS)
-        log.info("[TIMING] graph.ainvoke started")
+        # Get last user message for routing
+        last_user_text = ""
+        for msg in reversed(state["messages"]):
+            if isinstance(msg, HumanMessage):
+                last_user_text = msg.content
+                break
+
+        # Phase 1: Quick route classification (~300ms)
+        t_route = time.time()
+        from graph import classify_intent
+        route = await asyncio.get_event_loop().run_in_executor(
+            None, classify_intent, last_user_text, self._router_model
+        )
+        route_dur = int((time.time() - t_route) * 1000)
+        log.info(f"[TIMING] route: {route_dur}ms → {route or 'greeting'}")
+
+        # Phase 2: Emit filler immediately (no LLM, hardcoded)
+        filler = FILLER_BY_ROUTE.get(route)
+        if filler:
+            log.info(f"[TIMING] filler emitted at {int((time.time() - t_start) * 1000)}ms: {filler}")
+            self._event_ch.send_nowait(llm.ChatChunk(
+                id=utils.shortuuid("FL_"),
+                delta=llm.ChoiceDelta(role="assistant", content=filler),
+            ))
+            # FlushSentinel tells LiveKit: "this is complete, synthesize NOW"
+            # Without it, TTS waits for more text and the filler is never spoken
+            from livekit.agents.types import FlushSentinel
+            self._event_ch.send_nowait(FlushSentinel())
+
+        # Phase 3: Run full graph with pre-set route (skips router node)
+        if route:
+            state["route"] = route
+        else:
+            # Greeting — set voice_instructions directly, skip graph
+            state["route"] = "greeting_direct"
+            state["voice_instructions"] = "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband."
+
+        t_graph = time.time()
         result = await self._graph.ainvoke(state, self._config)
-        graph_dur = int((time.time() - t_start) * 1000)
+        graph_dur = int((time.time() - t_graph) * 1000)
 
         voice_instructions = result.get("voice_instructions", "")
         voice_data = result.get("voice_data", {})
-        route = result.get("route", "")
-        log.info(f"[TIMING] graph done: {graph_dur}ms, route={route}, instructions={len(voice_instructions)} chars")
+        log.info(f"[TIMING] graph: {graph_dur}ms, instructions={len(voice_instructions)} chars")
 
         if not voice_instructions:
-            self._event_ch.send_nowait(llm.ChatChunk(
-                id=utils.shortuuid("LG_"),
-                delta=llm.ChoiceDelta(role="assistant", content="How can I help you?"),
-            ))
-            return
+            return  # filler was enough, or nothing to say
 
-        # Phase 2: Stream synthesis via raw SDK (true token-by-token)
-        first_user, last_user = self._extract_user_messages(result.get("messages", []))
+        # Phase 4: Stream synthesis (raw SDK, token-by-token)
+        first_user = ""
+        for msg in state["messages"]:
+            if isinstance(msg, HumanMessage):
+                first_user = msg.content
+                break
 
         prompt = SYNTHESIS_PROMPT.format(
-            first_user=first_user,
-            last_user=last_user,
+            last_user=last_user_text,
             instructions=voice_instructions[:1000],
         )
         if voice_data:
-            prompt += f"\nKey data to reference:\n{json.dumps(voice_data, indent=2)[:800]}\n"
-
+            prompt += f"\nKey data:\n{json.dumps(voice_data, indent=2)[:800]}\n"
         prompt += "\nSpeak this response:"
 
-        # Stream synthesis via queue bridge: sync SDK thread → async consumer
-        # Each chunk is sent to TTS as soon as it arrives, not batched
-        import queue
         t_synth = time.time()
         token_count = 0
         q: queue.Queue[str | None] = queue.Queue()
 
         def _produce():
-            """Runs in thread — feeds chunks into queue as they arrive."""
             try:
                 for chunk in self._genai_client.models.generate_content_stream(
                     model=self._synthesis_model,
@@ -144,15 +176,12 @@ class GraphLLMStream(llm.LLMStream):
                     if text:
                         q.put(text)
             finally:
-                q.put(None)  # sentinel
+                q.put(None)
 
-        # Start producer in thread
         loop = asyncio.get_event_loop()
         producer = loop.run_in_executor(None, _produce)
 
-        # Consume chunks as they arrive — true streaming
         while True:
-            # Non-blocking poll with short sleep to stay async-friendly
             try:
                 text = q.get_nowait()
             except queue.Empty:
@@ -165,28 +194,17 @@ class GraphLLMStream(llm.LLMStream):
             token_count += 1
             if token_count == 1:
                 ttft = int((time.time() - t_synth) * 1000)
-                total_ttft = int((time.time() - t_start) * 1000)
-                log.info(f"[TIMING] synthesis first token: {ttft}ms (total TTFT: {total_ttft}ms)")
+                total = int((time.time() - t_start) * 1000)
+                log.info(f"[TIMING] synthesis first token: {ttft}ms (total: {total}ms)")
 
             self._event_ch.send_nowait(llm.ChatChunk(
                 id=utils.shortuuid("LG_"),
                 delta=llm.ChoiceDelta(role="assistant", content=text),
             ))
 
-        await producer  # ensure thread finished
-        synth_dur = int((time.time() - t_synth) * 1000)
+        await producer
         total_dur = int((time.time() - t_start) * 1000)
-        log.info(f"[TIMING] synthesis done: {synth_dur}ms, {token_count} tokens, total: {total_dur}ms")
-
-    def _extract_user_messages(self, messages):
-        first_user = ""
-        last_user = ""
-        for msg in messages:
-            if isinstance(msg, HumanMessage) and msg.content:
-                if not first_user:
-                    first_user = msg.content
-                last_user = msg.content
-        return first_user or "[new conversation]", last_user or "[no message]"
+        log.info(f"[TIMING] done: {total_dur}ms total, {token_count} synthesis tokens")
 
     def _chat_ctx_to_state(self) -> dict[str, Any]:
         messages = []
@@ -214,17 +232,13 @@ class GraphLLMStream(llm.LLMStream):
 
 
 class GraphLLMAdapter(llm.LLM):
-    """Graph thinks, raw SDK speaks.
-
-    Usage:
-        adapter = GraphLLMAdapter(graph=compiled_graph, synthesis_model="gemini-2.5-flash-lite")
-        session = AgentSession(llm=adapter)
-    """
+    """Route fast → filler → graph → synthesis."""
 
     def __init__(
         self,
         graph: PregelProtocol,
         synthesis_model: str = "gemini-2.5-flash-lite",
+        router_model=None,
         *,
         config: RunnableConfig | None = None,
     ):
@@ -233,6 +247,7 @@ class GraphLLMAdapter(llm.LLM):
         self._config = config
         self._synthesis_model = synthesis_model
         self._genai_client = _create_genai_client()
+        self._router_model = router_model
 
     @property
     def model(self) -> str:

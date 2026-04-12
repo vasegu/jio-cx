@@ -139,6 +139,35 @@ ALL_TOOLS = [
 
 
 # ---------------------------------------------------------------------------
+# Router classification (shared between graph and adapter)
+# ---------------------------------------------------------------------------
+
+ROUTER_PROMPT = (
+    "You are an intent classifier for a Jio Home broadband assistant.\n"
+    "Analyze the customer's message and respond with EXACTLY one word:\n"
+    "- troubleshoot — for connectivity, speed, wifi, router, diagnostic issues\n"
+    "- plan — for plan questions, pricing, upgrades, OTT bundles, comparisons\n"
+    "- complaint — for complaints, billing disputes, complaint status\n"
+    "- greeting — for hellos, how are you, general chitchat\n\n"
+    "Output ONLY the single word. Nothing else."
+)
+
+
+def classify_intent(text: str, llm) -> str:
+    """Classify user intent. Returns: troubleshoot, plan, complaint, or empty string (greeting)."""
+    messages = [SystemMessage(content=ROUTER_PROMPT), HumanMessage(content=text)]
+    response = llm.invoke(messages)
+    classification = response.content.strip().lower()
+    if "troubleshoot" in classification:
+        return "troubleshoot"
+    elif "plan" in classification:
+        return "plan"
+    elif "complaint" in classification:
+        return "complaint"
+    return ""
+
+
+# ---------------------------------------------------------------------------
 # LLM factory
 # ---------------------------------------------------------------------------
 
@@ -180,11 +209,7 @@ def build_graph(
     # --- Nodes ---
 
     def router(state: JioState):
-        """LLM-based intent classification. Sets route in state, NOT AIMessage.
-
-        Internal reasoning — nothing reaches TTS.
-        For greetings, sets voice_instructions directly.
-        """
+        """LLM-based intent classification. Uses shared classify_intent()."""
         t0 = time.time()
         user_messages = [m for m in state["messages"] if isinstance(m, HumanMessage)]
         if not user_messages:
@@ -194,35 +219,18 @@ def build_graph(
                 "voice_data": {},
             }
 
-        messages = [
-            SystemMessage(content=(
-                "You are an intent classifier for a Jio Home broadband assistant.\n"
-                "Analyze the customer's message and respond with EXACTLY one word:\n"
-                "- troubleshoot — for connectivity, speed, wifi, router, diagnostic issues\n"
-                "- plan — for plan questions, pricing, upgrades, OTT bundles, comparisons\n"
-                "- complaint — for complaints, billing disputes, complaint status\n"
-                "- greeting — for hellos, how are you, general chitchat\n\n"
-                "Output ONLY the single word. Nothing else."
-            )),
-        ] + state["messages"]
-
-        response = router_model.invoke(messages)
-        classification = response.content.strip().lower()
+        last_text = user_messages[-1].content
+        route = classify_intent(last_text, router_model)
         dur = int((time.time() - t0) * 1000)
-        log.info(f"[TIMING] router: {dur}ms → {classification[:20]}")
+        log.info(f"[TIMING] router: {dur}ms → {route or 'greeting'}")
 
-        if "troubleshoot" in classification:
-            return {"route": "troubleshoot"}
-        elif "plan" in classification:
-            return {"route": "plan"}
-        elif "complaint" in classification:
-            return {"route": "complaint"}
-        else:
-            return {
-                "route": "",
-                "voice_instructions": "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband.",
-                "voice_data": {},
-            }
+        if route:
+            return {"route": route}
+        return {
+            "route": "",
+            "voice_instructions": "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband.",
+            "voice_data": {},
+        }
 
     def agent_node(state: JioState):
         """Unified sub-agent: reasons about the query, calls tools as needed.
@@ -321,7 +329,16 @@ def build_graph(
     graph.add_node("extract", extract_voice_state)
     # No compute_output — synthesis happens in the adapter for true streaming
 
-    graph.add_edge(START, "router")
+    def should_route(state: JioState) -> Literal["router", "agent", "extract"]:
+        """Skip router if route is pre-set by adapter (filler flow)."""
+        route = state.get("route", "")
+        if route in ("troubleshoot", "plan", "complaint"):
+            return "agent"
+        elif route == "greeting_direct":
+            return "extract"
+        return "router"
+
+    graph.add_conditional_edges(START, should_route)
     graph.add_conditional_edges("router", route_from_router)
     graph.add_conditional_edges("agent", should_use_tools)
     graph.add_edge("tools", "agent")
