@@ -72,16 +72,6 @@ SYNTHESIS_PROMPT = (
     "What to communicate:\n{instructions}\n"
 )
 
-FILLER_PROMPT = (
-    "You are mid-conversation with a customer. Generate a brief 3-8 word acknowledgment "
-    "that flows naturally from the conversation so far. Examples: "
-    "'Sure, let me check that for you.' 'Okay, looking into Silver now.' "
-    "'Got it, let me find out.' "
-    "Do NOT answer the question. Do NOT include any facts, prices, or technical details. "
-    "Just acknowledge naturally. Match the customer's language and tone."
-)
-
-
 # ---------------------------------------------------------------------------
 # Provider factories
 # ---------------------------------------------------------------------------
@@ -121,17 +111,13 @@ def get_tts():
 class JioHomeAssistant(Agent):
     """Jio voice agent. Overrides llm_node to use LangGraph + filler + synthesis."""
 
-    def __init__(self, graph, router_model, synthesis_llm):
+    def __init__(self, graph, synthesis_llm):
         super().__init__(
             instructions=SYSTEM_PROMPT,
             llm="google/gemini-2.5-flash-lite",
         )
         self.graph = graph
-        self.router_model = router_model
         self.synthesis_llm = synthesis_llm
-        # Stable thread ID for LangSmith grouping across turns
-        from langsmith import utils as ls_utils
-        self._thread_id = str(ls_utils.uuid7()) if hasattr(ls_utils, 'uuid7') else str(id(self))
 
     async def llm_node(
         self,
@@ -139,12 +125,19 @@ class JioHomeAssistant(Agent):
         tools: list[FunctionTool],
         model_settings: ModelSettings,
     ) -> AsyncIterable[str]:
-        """yield filler → astream graph → yield synthesis."""
-        import queue
-        from graph import classify_intent
+        """Stream graph → yield filler on router update → yield synthesis on extract update.
+
+        All routing + filler happens inside the graph's router node.
+        This method just reacts to voice_instructions from each node update.
+        """
+        from livekit.agents.types import FlushSentinel
         from langsmith import traceable
         t_start = time.time()
-        thread_meta = {"thread_id": self._thread_id}
+
+        # Thread/turn IDs for LangSmith
+        room_id = self.session.room.name if self.session and self.session.room else "unknown"
+        thread_meta = {"thread_id": room_id}
+        turn_id = f"{room_id}-{int(t_start)}"
 
         state = self._build_state(chat_ctx)
         last_user = ""
@@ -157,90 +150,47 @@ class JioHomeAssistant(Agent):
             yield "How can I help you with your Jio Home broadband?"
             return
 
-        # 1. Classify intent (Flash-Lite, ~300ms)
-        t_route = time.time()
-        _classify = traceable(name="classify_intent", metadata=thread_meta)(classify_intent)
-        route = await asyncio.get_event_loop().run_in_executor(
-            None, _classify, last_user, self.router_model
-        )
-        route_dur = int((time.time() - t_route) * 1000)
-        log.info(f"[TIMING] route: {route_dur}ms → {route or 'greeting'}")
+        # Stream the graph — routing + filler happen inside the graph's router node
+        config = {"metadata": {**thread_meta, "turn_id": turn_id}}
 
-        # 2. Generate + yield filler (if routing to sub-agent)
-        ROUTE_LABELS = {
-            "plan": "broadband plans",
-            "troubleshoot": "connection diagnostics",
-            "complaint": "their complaint",
-        }
         filler_text = ""
-        if route:
-            t_filler = time.time()
-            topic_label = ROUTE_LABELS.get(route, route)
-            # Last 4 messages for personality continuity (tiny context, ~50-100ms overhead)
-            recent_msgs = state["messages"][-4:] if len(state["messages"]) > 4 else state["messages"]
-            filler_messages = [
-                SystemMessage(content=FILLER_PROMPT),
-                *recent_msgs,
-                HumanMessage(content=f"Topic: {topic_label}. Acknowledge briefly."),
-            ]
-            filler_response = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.router_model.invoke(
-                    filler_messages,
-                    config={"run_name": "generate_filler", "metadata": thread_meta},
-                )
-            )
-            filler_text = filler_response.content.strip()
-            if not filler_text.endswith(('.', '!', '?')):
-                filler_text += '.'
-            filler_dur = int((time.time() - t_filler) * 1000)
-            log.info(f"[TIMING] filler: {filler_dur}ms → {filler_text[:40]}")
-
-            # Yield filler + FlushSentinel — TTS synthesizes filler as its own segment
-            # FlushSentinel goes through text_ch (not _event_ch) so no metrics crash
-            # See: https://github.com/livekit/agents/issues/1370
-            from livekit.agents.types import FlushSentinel
-            yield filler_text
-            yield FlushSentinel()
-
-        # 3. Stream graph (filler is playing during this)
-        t_graph = time.time()
-        if route:
-            state["route"] = route
-        else:
-            # Greeting — set route so graph skips router node
-            state["route"] = "greeting"
-            state["voice_instructions"] = "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband."
-
-        # LangSmith thread grouping
-        config = {"metadata": thread_meta}
-
-        # Start with voice_instructions from state (greeting case sets it before graph)
-        final_vi = state.get("voice_instructions", "")
+        final_vi = ""
         final_vd = {}
+
         async for node_output in self.graph.astream(state, config, stream_mode="updates"):
             for node_name, update in node_output.items():
                 vi = update.get("voice_instructions", "")
                 vd = update.get("voice_data")
-                if vi:
+
+                if vi and vi != final_vi:
+                    if not filler_text and node_name == "router":
+                        # First voice_instructions from router = filler
+                        filler_text = vi
+                        elapsed = int((time.time() - t_start) * 1000)
+                        log.info(f"[TIMING] filler from router at {elapsed}ms: {vi[:40]}")
+                        yield filler_text
+                        yield FlushSentinel()
+
                     final_vi = vi
+
                 if vd is not None:
                     final_vd = vd
 
-        graph_dur = int((time.time() - t_graph) * 1000)
-        log.info(f"[TIMING] graph: {graph_dur}ms, instructions={len(final_vi)} chars")
+        graph_dur = int((time.time() - t_start) * 1000)
+        log.info(f"[TIMING] graph done: {graph_dur}ms, instructions={len(final_vi)} chars")
 
+        # Synthesise the final voice_instructions (from extract node)
         if not final_vi:
             yield "I'm not sure how to help with that. Could you tell me more?"
             return
 
-        # 4. Stream synthesis via queue bridge (sync .stream() → async yield)
         filler_context = ""
-        if filler_text:
+        if filler_text and final_vi != filler_text:
             filler_context = (
                 f"You already said: \"{filler_text}\" — continue naturally from that. "
                 "Don't repeat the acknowledgment. Go straight to the answer.\n\n"
             )
+
         prompt = SYNTHESIS_PROMPT.format(
             last_user=last_user,
             instructions=final_vi[:1000],
@@ -254,28 +204,34 @@ class JioHomeAssistant(Agent):
             HumanMessage(content="Speak this response."),
         ]
 
+        # Stream synthesis via asyncio.Queue (clean async, no busy-wait)
         t_synth = time.time()
         token_count = 0
-        q: queue.Queue[str | None] = queue.Queue()
+        q: asyncio.Queue[str | None] = asyncio.Queue()
 
-        @traceable(name="voice_synthesis", metadata=thread_meta)
-        def _produce():
-            try:
-                for chunk in self.synthesis_llm.stream(messages):
-                    text = chunk.content if hasattr(chunk, "content") else ""
-                    if text:
-                        q.put(text)
-            finally:
-                q.put(None)
+        async def _produce():
+            @traceable(name="voice_synthesis", metadata=thread_meta)
+            def _stream():
+                results = []
+                try:
+                    for chunk in self.synthesis_llm.stream(messages):
+                        text = chunk.content if hasattr(chunk, "content") else ""
+                        if text:
+                            results.append(text)
+                except Exception as e:
+                    log.error(f"Synthesis error: {e}")
+                return results
 
-        producer = asyncio.get_event_loop().run_in_executor(None, _produce)
+            # Run sync stream in thread, then put results in async queue
+            texts = await asyncio.get_event_loop().run_in_executor(None, _stream)
+            for text in texts:
+                await q.put(text)
+            await q.put(None)
+
+        producer = asyncio.create_task(_produce())
 
         while True:
-            try:
-                text = q.get_nowait()
-            except queue.Empty:
-                await asyncio.sleep(0.01)
-                continue
+            text = await q.get()
             if text is None:
                 break
             token_count += 1
@@ -332,7 +288,6 @@ def prewarm(proc: agents.JobProcess):
         router_llm=os.getenv("ROUTER_LLM", "google"),
         agent_llm=os.getenv("AGENT_LLM", "google"),
     )
-    proc.userdata["router_model"] = _get_llm("google", model="gemini-2.5-flash-lite")
     proc.userdata["synthesis_llm"] = _get_llm("google", model="gemini-2.5-flash-lite")
     proc.userdata["vad"] = silero.VAD.load()
 
@@ -346,11 +301,10 @@ server.setup_fnc = prewarm
 async def entrypoint(ctx: agents.JobContext):
     # Use pre-loaded models from prewarm
     graph = ctx.proc.userdata["graph"]
-    router_model = ctx.proc.userdata["router_model"]
     synthesis_llm = ctx.proc.userdata["synthesis_llm"]
     vad = ctx.proc.userdata["vad"]
 
-    agent = JioHomeAssistant(graph, router_model, synthesis_llm)
+    agent = JioHomeAssistant(graph, synthesis_llm)
 
     stt_name = os.getenv("STT_PROVIDER", "google")
     tts_name = os.getenv("TTS_PROVIDER", "google")

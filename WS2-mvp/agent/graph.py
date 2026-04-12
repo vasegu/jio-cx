@@ -224,25 +224,39 @@ def build_graph(
         dur = int((time.time() - t0) * 1000)
         log.info(f"[TIMING] router: {dur}ms → {route or 'greeting'}")
 
+        ROUTE_LABELS = {
+            "plan": "broadband plans",
+            "troubleshoot": "connection diagnostics",
+            "complaint": "their complaint",
+        }
+
         if route:
             # Generate contextual filler — spoken immediately while graph thinks
             t_filler = time.time()
+            topic_label = ROUTE_LABELS.get(route, route)
+            recent_msgs = state["messages"][-4:]
             filler = router_model.invoke([
                 SystemMessage(content=(
-                    "Generate ONLY a brief acknowledgment under 8 words. "
-                    "Do NOT answer the question. Just acknowledge you heard it. "
-                    "Match the customer's language."
+                    "You are mid-conversation with a customer. Generate a brief 3-8 word acknowledgment "
+                    "that flows naturally from the conversation so far. Examples: "
+                    "'Sure, let me check that for you.' 'Okay, looking into Silver now.' "
+                    "'Got it, let me find out.' "
+                    "Do NOT answer the question. Do NOT include any facts, prices, or technical details. "
+                    "Just acknowledge naturally. Match the customer's language and tone."
                 )),
-                HumanMessage(content=f"Customer said: {last_text}. Topic: {route}"),
+                *recent_msgs,
+                HumanMessage(content=f"Topic: {topic_label}. Acknowledge briefly."),
             ])
-            filler_dur = int((time.time() - t_filler) * 1000)
             filler_text = filler.content.strip()
-            log.info(f"[TIMING] filler LLM: {filler_dur}ms → {filler_text[:40]}")
+            if not filler_text.endswith(('.', '!', '?')):
+                filler_text += '.'
+            filler_dur = int((time.time() - t_filler) * 1000)
+            log.info(f"[TIMING] filler: {filler_dur}ms → {filler_text[:40]}")
             return {"route": route, "voice_instructions": filler_text}
 
-        # Greeting — voice_instructions IS the full response (synthesised by adapter)
+        # Greeting — voice_instructions synthesised by adapter
         return {
-            "route": "",
+            "route": "greeting",
             "voice_instructions": "Respond to the customer's greeting warmly. Offer to help with their Jio Home broadband.",
             "voice_data": {},
         }
@@ -344,16 +358,7 @@ def build_graph(
     graph.add_node("extract", extract_voice_state)
     # No compute_output — synthesis happens in the adapter for true streaming
 
-    def should_route(state: JioState) -> Literal["router", "agent", "extract"]:
-        """Skip router if route is pre-set by llm_node."""
-        route = state.get("route", "")
-        if route in ("troubleshoot", "plan", "complaint"):
-            return "agent"
-        elif route:  # any other non-empty (e.g. greeting with voice_instructions set)
-            return "extract"
-        return "router"
-
-    graph.add_conditional_edges(START, should_route)
+    graph.add_edge(START, "router")
     graph.add_conditional_edges("router", route_from_router)
     graph.add_conditional_edges("agent", should_use_tools)
     graph.add_edge("tools", "agent")
