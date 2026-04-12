@@ -141,8 +141,11 @@ function base64ToArrayBuffer(base64) {
 /* ---------- VoiceScreen (live agent via LiveKit) ---------- */
 function VoiceScreen({ onClose }) {
   const [token, setToken] = useState(null)
+  const tokenFetched = useRef(false)
 
   useEffect(() => {
+    if (tokenFetched.current) return
+    tokenFetched.current = true
     fetch(TOKEN_URL)
       .then(r => r.json())
       .then(d => setToken(d.token))
