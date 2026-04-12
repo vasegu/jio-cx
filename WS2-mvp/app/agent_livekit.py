@@ -67,15 +67,18 @@ SYNTHESIS_PROMPT = (
     "- Start responses with natural markers: \"So\", \"Okay so\", \"Right\"\n"
     "- Use contractions: \"you'll get\" not \"you will get\"\n"
     "- One acknowledgment max, then answer. No preamble.\n\n"
+    "{filler_context}"
     "Customer said: {last_user}\n\n"
     "What to communicate:\n{instructions}\n"
 )
 
 FILLER_PROMPT = (
-    "Generate a 3-5 word acknowledgment. Examples: "
-    "'Okay, checking that now.' 'Sure, one moment.' 'Got it, looking into it.' "
-    "Do NOT answer the question. Do NOT include any facts, names, numbers or details. "
-    "Just a brief acknowledgment. Match the customer's language."
+    "You are mid-conversation with a customer. Generate a brief 3-8 word acknowledgment "
+    "that flows naturally from the conversation so far. Examples: "
+    "'Sure, let me check that for you.' 'Okay, looking into Silver now.' "
+    "'Got it, let me find out.' "
+    "Do NOT answer the question. Do NOT include any facts, prices, or technical details. "
+    "Just acknowledge naturally. Match the customer's language and tone."
 )
 
 
@@ -173,13 +176,17 @@ class JioHomeAssistant(Agent):
         if route:
             t_filler = time.time()
             topic_label = ROUTE_LABELS.get(route, route)
+            # Last 4 messages for personality continuity (tiny context, ~50-100ms overhead)
+            recent_msgs = state["messages"][-4:] if len(state["messages"]) > 4 else state["messages"]
+            filler_messages = [
+                SystemMessage(content=FILLER_PROMPT),
+                *recent_msgs,
+                HumanMessage(content=f"Topic: {topic_label}. Acknowledge briefly."),
+            ]
             filler_response = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: self.router_model.invoke(
-                    [
-                        SystemMessage(content=FILLER_PROMPT),
-                        HumanMessage(content=f"Customer said: \"{last_user}\". Topic: {topic_label}."),
-                    ],
+                    filler_messages,
                     config={"run_name": "generate_filler", "metadata": thread_meta},
                 )
             )
@@ -228,9 +235,16 @@ class JioHomeAssistant(Agent):
             return
 
         # 4. Stream synthesis via queue bridge (sync .stream() → async yield)
+        filler_context = ""
+        if filler_text:
+            filler_context = (
+                f"You already said: \"{filler_text}\" — continue naturally from that. "
+                "Don't repeat the acknowledgment. Go straight to the answer.\n\n"
+            )
         prompt = SYNTHESIS_PROMPT.format(
             last_user=last_user,
             instructions=final_vi[:1000],
+            filler_context=filler_context,
         )
         if final_vd:
             prompt += f"\nKey data:\n{json.dumps(final_vd, indent=2)[:800]}\n"

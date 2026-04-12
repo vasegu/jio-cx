@@ -1,0 +1,186 @@
+[
+  {
+    "timestamp": "2026-04-12T15:42:24.107151+00:00",
+    "name": "classify_intent",
+    "duration_ms": 1722,
+    "input_preview": "",
+    "trace_id": "019d825b-bf6b-7580-acb0-4348a8180ab8",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:25.830328+00:00",
+    "name": "LangGraph",
+    "duration_ms": 4,
+    "input_preview": "Hey, how are you?",
+    "trace_id": "019d825b-c626-7832-ad25-6d4e46f12781",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:25.837730+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 1492,
+    "input_preview": "",
+    "trace_id": "019d825b-c62d-7971-9b19-85b7a8579d30",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:39.915033+00:00",
+    "name": "classify_intent",
+    "duration_ms": 358,
+    "input_preview": "",
+    "trace_id": "019d825b-fd2b-7753-89e1-8d731ff7c360",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:40.274420+00:00",
+    "name": "generate_filler",
+    "duration_ms": 348,
+    "input_preview": "",
+    "trace_id": "019d825b-fe92-72d1-9eda-f6303adafb14",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:40.624964+00:00",
+    "name": "LangGraph",
+    "duration_ms": 14098,
+    "input_preview": "Can you tell me about what plans you have?",
+    "trace_id": "019d825b-fff0-79a0-8d38-ea1d23b6bc77",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:42:54.727592+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 364,
+    "input_preview": "",
+    "trace_id": "019d825c-3707-79a2-951a-5c5a45533329",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:14.730482+00:00",
+    "name": "classify_intent",
+    "duration_ms": 290,
+    "input_preview": "",
+    "trace_id": "019d825c-852a-7481-962d-119df64fedf6",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:15.021736+00:00",
+    "name": "generate_filler",
+    "duration_ms": 228,
+    "input_preview": "",
+    "trace_id": "019d825c-864d-7061-a02c-41d4fd0501ad",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:15.253341+00:00",
+    "name": "LangGraph",
+    "duration_ms": 2965,
+    "input_preview": "Can you tell me more about the silver plan? And what Ott is?",
+    "trace_id": "019d825c-8735-7620-a8eb-e95c8345e143",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:18.220364+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 434,
+    "input_preview": "",
+    "trace_id": "019d825c-92cc-7930-9610-8542c76825ea",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:44.532592+00:00",
+    "name": "classify_intent",
+    "duration_ms": 334,
+    "input_preview": "",
+    "trace_id": "019d825c-f994-73b2-bd20-5cb169da292c",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:44.867958+00:00",
+    "name": "generate_filler",
+    "duration_ms": 285,
+    "input_preview": "",
+    "trace_id": "019d825c-fae3-7e71-95da-e227ef12fa2e",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:45.155213+00:00",
+    "name": "LangGraph",
+    "duration_ms": 9454,
+    "input_preview": "What's the difference between jio Cinema and silver and on gold?",
+    "trace_id": "019d825c-fc03-7672-9589-7fc310afa0b6",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:43:54.617225+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 427,
+    "input_preview": "",
+    "trace_id": "019d825d-20f9-7813-8e8a-223ec55fe478",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:24.291340+00:00",
+    "name": "classify_intent",
+    "duration_ms": 312,
+    "input_preview": "",
+    "trace_id": "019d825d-94e3-7f03-be63-dc552502a7f6",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:24.604037+00:00",
+    "name": "generate_filler",
+    "duration_ms": 209,
+    "input_preview": "",
+    "trace_id": "019d825d-961c-7e53-8fb5-d518b1191b1a",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:24.815077+00:00",
+    "name": "LangGraph",
+    "duration_ms": 2424,
+    "input_preview": "And what's are fiber?",
+    "trace_id": "019d825d-96ef-75b3-aecf-7a4a1d5b79e8",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:27.241350+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 348,
+    "input_preview": "",
+    "trace_id": "019d825d-a069-79e0-9b83-54de822a1f58",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:40.797626+00:00",
+    "name": "classify_intent",
+    "duration_ms": 260,
+    "input_preview": "",
+    "trace_id": "019d825d-d55d-7fa0-bda1-1e0fd67a6b9d",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:41.058165+00:00",
+    "name": "generate_filler",
+    "duration_ms": 255,
+    "input_preview": "",
+    "trace_id": "019d825d-d662-7292-b651-99b80664dc02",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:41.314953+00:00",
+    "name": "LangGraph",
+    "duration_ms": 3004,
+    "input_preview": "Does it work in the middle of nowhere?",
+    "trace_id": "019d825d-d762-7a30-ab54-50d173fe56d1",
+    "thread_id": "5123184624"
+  },
+  {
+    "timestamp": "2026-04-12T15:44:44.321242+00:00",
+    "name": "voice_synthesis",
+    "duration_ms": 387,
+    "input_preview": "",
+    "trace_id": "019d825d-e321-79c0-ab13-fd38f727793f",
+    "thread_id": "5123184624"
+  }
+]
