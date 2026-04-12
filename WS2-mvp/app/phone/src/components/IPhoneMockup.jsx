@@ -92,7 +92,14 @@ const SERVICES = [
 const LIVEKIT_URL = 'wss://jiobuddy-y3inkf8x.livekit.cloud'
 const TOKEN_URL = 'http://localhost:8089/token'
 
-import { Room, RoomEvent, Track, ConnectionState } from 'livekit-client'
+import {
+  LiveKitRoom,
+  useVoiceAssistant,
+  BarVisualizer,
+  RoomAudioRenderer,
+  useRoomContext,
+} from '@livekit/components-react'
+import '@livekit/components-styles'
 
 /* ---------- Audio helpers ---------- */
 function floatTo16BitPCM(float32Array) {
@@ -132,12 +139,57 @@ function base64ToArrayBuffer(base64) {
 
 /* ---------- VoiceScreen (live agent via LiveKit) ---------- */
 function VoiceScreen({ onClose }) {
+  const [token, setToken] = useState(null)
+
+  useEffect(() => {
+    fetch(TOKEN_URL)
+      .then(r => r.json())
+      .then(d => setToken(d.token))
+      .catch(e => console.error('[VoiceScreen] Token error:', e))
+  }, [])
+
+  if (!token) {
+    return (
+      <div style={{
+        position: 'absolute', top: 44, left: 0, right: 0, bottom: 0, zIndex: 15,
+        background: 'linear-gradient(180deg, #061654 0%, #0a1a3a 40%, #0d0d1a 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(255,255,255,0.5)', fontSize: 13,
+      }}>
+        Connecting...
+      </div>
+    )
+  }
+
+  return (
+    <LiveKitRoom
+      serverUrl={LIVEKIT_URL}
+      token={token}
+      connect={true}
+      audio={true}
+      style={{ position: 'absolute', top: 44, left: 0, right: 0, bottom: 0, zIndex: 15 }}
+    >
+      <VoiceContent onClose={onClose} />
+      <RoomAudioRenderer />
+    </LiveKitRoom>
+  )
+}
+
+function VoiceContent({ onClose }) {
   const [messages, setMessages] = useState([])
-  const [phase, setPhase] = useState('connecting') // connecting | idle | listening | thinking | speaking
   const scrollRef = useRef(null)
-  const roomRef = useRef(null)
   const pendingUserMsgRef = useRef(null)
   const pendingAgentMsgRef = useRef(null)
+
+  const { state: agentState, audioTrack } = useVoiceAssistant()
+  const room = useRoomContext()
+
+  // Map agent state to our phase
+  const phase = agentState === 'speaking' ? 'speaking'
+    : agentState === 'thinking' ? 'thinking'
+    : agentState === 'listening' ? 'listening'
+    : agentState === 'connecting' ? 'connecting'
+    : 'listening'
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -146,170 +198,50 @@ function VoiceScreen({ onClose }) {
     }
   }, [messages])
 
-  // LiveKit Room lifecycle
+  // Transcription handling via room events
   useEffect(() => {
-    let room = null
+    if (!room) return
+    const { RoomEvent } = require('livekit-client')
 
-    async function connect() {
-      setPhase('connecting')
-      try {
-        // Get token from token server
-        const resp = await fetch(TOKEN_URL)
-        const { token } = await resp.json()
+    const handler = (segments, participant) => {
+      const isAgent = participant?.identity?.startsWith('agent')
+      for (const seg of segments) {
+        const text = seg.text?.trim()
+        if (!text) continue
 
-        room = new Room()
-        roomRef.current = room
+        const from = isAgent ? 'agent' : 'user'
+        const pendingRef = isAgent ? pendingAgentMsgRef : pendingUserMsgRef
 
-        // Agent audio — attach to play automatically
-        room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-          console.log('[VoiceScreen] Track subscribed:', track.kind, participant?.identity)
-          if (track.kind === Track.Kind.Audio) {
-            const el = track.attach()
-            el.id = 'agent-audio'
-            document.body.appendChild(el)
-            console.log('[VoiceScreen] Agent audio attached')
-            setPhase('speaking')
-          }
-        })
-
-        room.on(RoomEvent.TrackUnsubscribed, (track) => {
-          track.detach().forEach(el => el.remove())
-        })
-
-        // Participant events
-        room.on(RoomEvent.ParticipantConnected, (participant) => {
-          console.log('[VoiceScreen] Participant joined:', participant.identity)
-        })
-
-        // Agent state
-        room.on(RoomEvent.RoomMetadataChanged, (metadata) => {
-          console.log('[VoiceScreen] Room metadata:', metadata)
-        })
-
-        // Transcription events — LiveKit provides these natively
-        room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
-          const isAgent = participant?.identity?.startsWith('agent')
-          for (const seg of segments) {
-            const text = seg.text?.trim()
-            if (!text) continue
-
-            const from = isAgent ? 'agent' : 'user'
-            const pendingRef = isAgent ? pendingAgentMsgRef : pendingUserMsgRef
-
-            if (pendingRef.current !== null) {
-              // Update existing pending message
-              setMessages(prev => {
-                const updated = [...prev]
-                if (updated[pendingRef.current]) {
-                  updated[pendingRef.current] = { ...updated[pendingRef.current], text }
-                }
-                return updated
-              })
-            } else {
-              // Create new message
-              setMessages(prev => {
-                pendingRef.current = prev.length
-                return [...prev, { from, text, ...(isAgent ? { tools: [] } : {}) }]
-              })
+        if (pendingRef.current !== null) {
+          setMessages(prev => {
+            const updated = [...prev]
+            if (updated[pendingRef.current]) {
+              updated[pendingRef.current] = { ...updated[pendingRef.current], text }
             }
+            return updated
+          })
+        } else {
+          setMessages(prev => {
+            pendingRef.current = prev.length
+            return [...prev, { from, text, ...(isAgent ? { tools: [] } : {}) }]
+          })
+        }
 
-            // Finalize — reset pending ref so next segment starts fresh
-            if (seg.final) {
-              pendingRef.current = null
-            }
-          }
-        })
-
-        // Agent state changes
-        room.on(RoomEvent.ConnectionStateChanged, (state) => {
-          if (state === ConnectionState.Connected) {
-            setPhase('listening')
-          } else if (state === ConnectionState.Disconnected) {
-            setPhase('connecting')
-          }
-        })
-
-        await room.connect(LIVEKIT_URL, token)
-        console.log('[VoiceScreen] Connected to room')
-        // Small delay to let WebRTC settle before publishing mic
-        await new Promise(r => setTimeout(r, 500))
-        await room.localParticipant.setMicrophoneEnabled(true)
-        console.log('[VoiceScreen] Mic enabled')
-        setPhase('listening')
-      } catch (err) {
-        console.error('[VoiceScreen] connect error:', err)
-        setPhase('idle')
+        if (seg.final) {
+          pendingRef.current = null
+        }
       }
     }
 
-    connect()
-
-    return () => {
-      if (roomRef.current) {
-        roomRef.current.disconnect()
-        roomRef.current = null
-      }
-      // Remove any agent audio elements
-      document.querySelectorAll('#agent-audio').forEach(el => el.remove())
-    }
-  }, [])
+    room.on(RoomEvent.TranscriptionReceived, handler)
+    return () => room.off(RoomEvent.TranscriptionReceived, handler)
+  }, [room])
 
   const handleOrbTap = useCallback(() => {
-    const room = roomRef.current
     if (!room) return
-    if (phase === 'listening') {
-      room.localParticipant.setMicrophoneEnabled(false)
-      setPhase('idle')
-    } else if (phase === 'idle') {
-      room.localParticipant.setMicrophoneEnabled(true)
-      setPhase('listening')
-    }
-    // Do nothing if connecting, thinking, or speaking
-  }, [phase])
-
-  // Orb animation properties based on phase
-  const getOrbGlow = () => {
-    switch (phase) {
-      case 'listening':
-        return '0 0 32px rgba(15,60,201,0.6), 0 0 64px rgba(15,60,201,0.3)'
-      case 'thinking':
-        return '0 0 24px rgba(15,60,201,0.35), 0 0 48px rgba(15,60,201,0.15)'
-      case 'speaking':
-        return '0 0 40px rgba(15,60,201,0.6), 0 0 80px rgba(15,60,201,0.25)'
-      case 'connecting':
-        return '0 0 12px rgba(15,60,201,0.15)'
-      default:
-        return '0 0 16px rgba(15,60,201,0.2)'
-    }
-  }
-
-  const getOuterRingSpeed = () => {
-    switch (phase) {
-      case 'listening': return '1.5s'
-      case 'thinking': return '2s'
-      case 'speaking': return '1.2s'
-      default: return '3s'
-    }
-  }
-
-  const getMidRingSpeed = () => {
-    switch (phase) {
-      case 'listening': return '1.2s'
-      case 'thinking': return '1.8s'
-      case 'speaking': return '1s'
-      default: return '2.5s'
-    }
-  }
-
-  const getStatusText = () => {
-    switch (phase) {
-      case 'connecting': return 'Connecting...'
-      case 'listening': return 'Listening...'
-      case 'thinking': return 'Thinking...'
-      case 'speaking': return 'Buddy is speaking...'
-      default: return 'Tap the orb to speak'
-    }
-  }
+    const isMuted = !room.localParticipant.isMicrophoneEnabled
+    room.localParticipant.setMicrophoneEnabled(isMuted)
+  }, [room])
 
   return (
     <div style={{
@@ -337,89 +269,31 @@ function VoiceScreen({ onClose }) {
         </button>
       </div>
 
-      {/* Voice Orb */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 0 8px' }}>
-        <div
-          onClick={handleOrbTap}
-          style={{ width: 72, height: 72, position: 'relative', cursor: phase === 'connecting' ? 'default' : 'pointer' }}
-        >
-          {/* Outer glow ring */}
-          <div style={{
-            position: 'absolute', inset: -20, borderRadius: '50%',
-            border: '1px solid rgba(15,60,201,0.12)',
-            animation: `pulse ${getOuterRingSpeed()} ease-in-out infinite 0.4s`,
-          }} />
-          {/* Mid ring */}
-          <div style={{
-            position: 'absolute', inset: -10, borderRadius: '50%',
-            border: '1.5px solid rgba(15,60,201,0.25)',
-            animation: `pulse ${getMidRingSpeed()} ease-in-out infinite`,
-          }} />
-          {/* Core orb */}
-          <div style={{
-            width: '100%', height: '100%', borderRadius: '50%',
-            background: 'radial-gradient(circle at 40% 35%, #3D5FE3 0%, #0F3CC9 50%, #0a2885 100%)',
-            boxShadow: getOrbGlow(),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'box-shadow 0.4s ease',
-            opacity: phase === 'connecting' ? 0.6 : 1,
-          }}>
-            <span style={{
-              fontSize: 16, fontWeight: 700, color: '#fff',
-              fontFamily: 'var(--font)', letterSpacing: '0.04em',
-            }}>jio</span>
-          </div>
-        </div>
-
-        {/* Waveform bars */}
-        <div style={{ display: 'flex', gap: 3, marginTop: 16, height: 20, alignItems: 'center' }}>
-          {(phase === 'speaking' || phase === 'listening') ? (
-            [0, 1, 2, 3, 4, 5, 6].map(i => {
-              const isSpeaking = phase === 'speaking'
-              return (
-                <div key={i} style={{
-                  width: 3,
-                  height: isSpeaking
-                    ? (i === 3 ? 20 : (i === 2 || i === 4) ? 16 : (i === 1 || i === 5) ? 12 : 8)
-                    : 4,
-                  background: isSpeaking ? 'rgba(15,60,201,0.5)' : 'rgba(15,60,201,0.3)',
-                  borderRadius: 2,
-                  animation: isSpeaking
-                    ? `waveform ${0.35 + i * 0.08}s ease-in-out infinite`
-                    : `pulse 2s ease-in-out infinite`,
-                  animationDelay: isSpeaking ? `${i * 0.06}s` : `${i * 0.15}s`,
-                }} />
-              )
-            })
-          ) : phase === 'thinking' ? (
-            [0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: 5, height: 5,
-                background: 'rgba(15,60,201,0.4)',
-                borderRadius: '50%',
-                animation: `pulse 1.2s ease-in-out infinite`,
-                animationDelay: `${i * 0.3}s`,
-              }} />
-            ))
-          ) : phase === 'connecting' ? (
-            [0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: 5, height: 5,
-                background: 'rgba(15,60,201,0.25)',
-                borderRadius: '50%',
-                animation: `pulse 1.8s ease-in-out infinite`,
-                animationDelay: `${i * 0.4}s`,
-              }} />
-            ))
-          ) : (
-            [0, 1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} style={{
-                width: 3, height: 3,
-                background: 'rgba(15,60,201,0.2)',
-                borderRadius: 2,
-              }} />
-            ))
-          )}
+      {/* Voice Visualizer */}
+      <div
+        onClick={handleOrbTap}
+        style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: '24px 20px 8px', cursor: 'pointer',
+          '--lk-fg': '#0F3CC9',
+          '--lk-va-bg': 'rgba(15,60,201,0.15)',
+        }}
+      >
+        <BarVisualizer
+          state={agentState}
+          trackRef={audioTrack}
+          barCount={7}
+          style={{ width: '100%', height: 64 }}
+        />
+        <div style={{
+          marginTop: 8, fontSize: 10,
+          color: 'rgba(255,255,255,0.4)',
+        }}>
+          {phase === 'connecting' ? 'Connecting...'
+            : phase === 'listening' ? 'Listening...'
+            : phase === 'thinking' ? 'Thinking...'
+            : phase === 'speaking' ? 'Buddy is speaking...'
+            : 'Tap to mute/unmute'}
         </div>
       </div>
 
