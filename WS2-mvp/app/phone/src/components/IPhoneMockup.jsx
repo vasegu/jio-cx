@@ -360,7 +360,11 @@ function VoiceContent({ onClose }) {
         textAlign: 'center', padding: '8px 16px 16px',
         fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500,
       }}>
-        {getStatusText()}
+        {phase === 'connecting' ? 'Connecting...'
+          : phase === 'listening' ? 'Listening...'
+          : phase === 'thinking' ? 'Thinking...'
+          : phase === 'speaking' ? 'Buddy is speaking...'
+          : 'Tap to speak'}
       </div>
     </div>
   )
