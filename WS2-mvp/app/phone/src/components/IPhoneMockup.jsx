@@ -188,50 +188,34 @@ function VoiceScreen({ onClose }) {
 
         // Transcription events — LiveKit provides these natively
         room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
-          console.log('[VoiceScreen] Transcription:', participant?.identity, segments.length, 'segments')
           const isAgent = participant?.identity?.startsWith('agent')
           for (const seg of segments) {
             const text = seg.text?.trim()
             if (!text) continue
 
-            if (isAgent) {
-              if (seg.final) {
-                // Final agent transcript — create/update message
-                setMessages(prev => [...prev, { from: 'agent', text, tools: [] }])
-                pendingAgentMsgRef.current = null
-              } else {
-                // Incremental agent transcript
-                if (pendingAgentMsgRef.current !== null) {
-                  setMessages(prev => {
-                    const updated = [...prev]
-                    updated[pendingAgentMsgRef.current] = { ...updated[pendingAgentMsgRef.current], text }
-                    return updated
-                  })
-                } else {
-                  setMessages(prev => {
-                    pendingAgentMsgRef.current = prev.length
-                    return [...prev, { from: 'agent', text, tools: [] }]
-                  })
+            const from = isAgent ? 'agent' : 'user'
+            const pendingRef = isAgent ? pendingAgentMsgRef : pendingUserMsgRef
+
+            if (pendingRef.current !== null) {
+              // Update existing pending message
+              setMessages(prev => {
+                const updated = [...prev]
+                if (updated[pendingRef.current]) {
+                  updated[pendingRef.current] = { ...updated[pendingRef.current], text }
                 }
-              }
+                return updated
+              })
             } else {
-              if (seg.final) {
-                setMessages(prev => [...prev, { from: 'user', text }])
-                pendingUserMsgRef.current = null
-              } else {
-                if (pendingUserMsgRef.current !== null) {
-                  setMessages(prev => {
-                    const updated = [...prev]
-                    updated[pendingUserMsgRef.current] = { ...updated[pendingUserMsgRef.current], text }
-                    return updated
-                  })
-                } else {
-                  setMessages(prev => {
-                    pendingUserMsgRef.current = prev.length
-                    return [...prev, { from: 'user', text }]
-                  })
-                }
-              }
+              // Create new message
+              setMessages(prev => {
+                pendingRef.current = prev.length
+                return [...prev, { from, text, ...(isAgent ? { tools: [] } : {}) }]
+              })
+            }
+
+            // Finalize — reset pending ref so next segment starts fresh
+            if (seg.final) {
+              pendingRef.current = null
             }
           }
         })
