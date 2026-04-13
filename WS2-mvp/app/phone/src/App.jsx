@@ -8,6 +8,8 @@ export const AgentEventsContext = createContext({
   addEvent: () => {},
   agentState: 'disconnected',
   setAgentState: () => {},
+  roomId: null,
+  setRoomId: () => {},
 })
 
 export function useAgentEvents() {
@@ -17,6 +19,7 @@ export function useAgentEvents() {
 export default function App() {
   const [events, setEvents] = useState([])
   const [agentState, setAgentState] = useState('disconnected')
+  const [roomId, setRoomId] = useState(null)
 
   const addEvent = (type, text) => {
     const now = new Date()
@@ -25,7 +28,7 @@ export default function App() {
   }
 
   return (
-    <AgentEventsContext.Provider value={{ events, addEvent, agentState, setAgentState }}>
+    <AgentEventsContext.Provider value={{ events, addEvent, agentState, setAgentState, roomId, setRoomId }}>
       <div style={{
         height: '100vh',
         background: 'linear-gradient(135deg, #060610 0%, #0a0a1a 100%)',
@@ -57,7 +60,7 @@ export default function App() {
         </div>
 
         {/* Right: Trace Panel */}
-        <TracePanel events={events} agentState={agentState} />
+        <TracePanel events={events} agentState={agentState} roomId={roomId} />
       </div>
     </AgentEventsContext.Provider>
   )

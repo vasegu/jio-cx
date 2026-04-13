@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 
-const LANGSMITH_URL = 'https://eu.smith.langchain.com/o/vasegu/projects/p/JioBuddy'
-const LIVEKIT_URL = 'https://cloud.livekit.io/projects/p_/jiobuddy-y3inkf8x/sessions'
+const LANGSMITH_URL = 'https://eu.smith.langchain.com/o/7e48788f-5872-4578-a229-4f3f90fc07d4/projects/p/42036c3a-32bc-4bf8-8b39-26c6e6eb45c4?timeModel=%7B%22duration%22%3A%221d%22%7D'
+const LIVEKIT_CLOUD_URL = 'https://cloud.livekit.io/projects/p_5axl57e61bj/sessions'
 
-export default function TracePanel({ events = [], agentState = 'disconnected' }) {
+export default function TracePanel({ events = [], agentState = 'disconnected', roomId = null }) {
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function TracePanel({ events = [], agentState = 'disconnected' })
           Open LangSmith
         </a>
         <a
-          href={LIVEKIT_URL}
+          href={roomId ? `${LIVEKIT_CLOUD_URL}/${roomId}` : LIVEKIT_CLOUD_URL}
           target="_blank"
           rel="noopener noreferrer"
           style={{

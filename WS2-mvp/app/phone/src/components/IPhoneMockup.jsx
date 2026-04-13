@@ -194,7 +194,7 @@ function VoiceContent({ onClose }) {
   const pendingAgentMsgRef = useRef(null)
 
   // Trace context — sends events to desktop trace panel
-  const { addEvent, setAgentState: setAgentStateFn } = useAgentEvents()
+  const { addEvent, setAgentState: setAgentStateFn, setRoomId } = useAgentEvents()
 
   const agent = useVoiceAssistant()
   const agentState = agent?.state || 'connecting'
@@ -209,6 +209,13 @@ function VoiceContent({ onClose }) {
       prevState.current = agentState
     }
   }, [agentState])
+
+  // Push room ID for trace links
+  useEffect(() => {
+    if (room?.sid) {
+      setRoomId(room.sid)
+    }
+  }, [room?.sid])
   const room = useRoomContext()
 
   // Map agent state to our phase
