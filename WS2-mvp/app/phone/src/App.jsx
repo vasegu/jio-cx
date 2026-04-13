@@ -1,6 +1,7 @@
 import { useState, createContext, useContext } from 'react'
 import IPhoneMockup from './components/IPhoneMockup'
 import TracePanel from './components/TracePanel'
+import ArchitectureSlides from './components/ArchitectureSlides'
 
 // Shared context for agent events (VoiceContent → TracePanel)
 export const AgentEventsContext = createContext({
@@ -20,11 +21,20 @@ export default function App() {
   const [events, setEvents] = useState([])
   const [agentState, setAgentState] = useState('disconnected')
   const [roomId, setRoomId] = useState(null)
+  const [view, setView] = useState('demo') // 'demo' | 'architecture'
 
   const addEvent = (type, text) => {
     const now = new Date()
     const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    setEvents(prev => [...prev.slice(-50), { time, type, text }]) // keep last 50
+    setEvents(prev => [...prev.slice(-50), { time, type, text }])
+  }
+
+  if (view === 'architecture') {
+    return (
+      <div style={{ height: '100vh' }}>
+        <ArchitectureSlides onBack={() => setView('demo')} />
+      </div>
+    )
   }
 
   return (
@@ -57,6 +67,17 @@ export default function App() {
             </p>
           </div>
           <IPhoneMockup />
+          <button
+            onClick={() => setView('architecture')}
+            style={{
+              marginTop: 4, padding: '6px 16px', borderRadius: 8,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.4)', fontSize: 10, cursor: 'pointer',
+              letterSpacing: '0.05em',
+            }}
+          >
+            View Architecture →
+          </button>
         </div>
 
         {/* Right: Trace Panel */}
