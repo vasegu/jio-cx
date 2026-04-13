@@ -67,37 +67,27 @@ export default function TracePanel({ events = [], agentState = 'disconnected', r
         </div>
       </div>
 
-      {/* Graph visualization */}
+      {/* Live graph visualization — LangGraphics iframe */}
       <div style={{
-        padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        fontSize: 10,
+        position: 'relative',
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 6, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-          Graph Flow
+        <div style={{
+          padding: '8px 16px 4px', fontSize: 9,
+          color: 'rgba(255,255,255,0.3)',
+          textTransform: 'uppercase', letterSpacing: '0.1em',
+        }}>
+          Live Graph
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          {['STT', 'router', 'agent', 'tools', 'extract', 'synthesis', 'TTS'].map((node, i) => (
-            <div key={node} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{
-                padding: '2px 6px', borderRadius: 4,
-                background: node === 'agent' && agentState === 'thinking' ? 'rgba(255,183,77,0.2)'
-                  : node === 'synthesis' && agentState === 'speaking' ? 'rgba(61,111,255,0.2)'
-                  : 'rgba(255,255,255,0.04)',
-                border: node === 'agent' && agentState === 'thinking' ? '1px solid rgba(255,183,77,0.3)'
-                  : node === 'synthesis' && agentState === 'speaking' ? '1px solid rgba(61,111,255,0.3)'
-                  : '1px solid rgba(255,255,255,0.06)',
-                color: node === 'agent' && agentState === 'thinking' ? '#FFB74D'
-                  : node === 'synthesis' && agentState === 'speaking' ? '#6B8FFF'
-                  : 'rgba(255,255,255,0.4)',
-                fontSize: 9,
-              }}>
-                {node}
-              </span>
-              {i < 6 && <span style={{ color: 'rgba(255,255,255,0.15)' }}>→</span>}
-            </div>
-          ))}
-        </div>
+        <iframe
+          src="http://localhost:8764"
+          style={{
+            width: '100%', height: 220,
+            border: 'none',
+            background: '#0c0c18',
+          }}
+          title="LangGraph Visualization"
+        />
       </div>
 
       {/* Live events */}
