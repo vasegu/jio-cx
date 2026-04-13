@@ -1,0 +1,184 @@
+import { useState, useEffect, useRef } from 'react'
+
+const LANGSMITH_URL = 'https://eu.smith.langchain.com/o/vasegu/projects/p/JioBuddy'
+const LIVEKIT_URL = 'https://cloud.livekit.io/projects/p_/jiobuddy-y3inkf8x/sessions'
+
+export default function TracePanel({ events = [], agentState = 'disconnected' }) {
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [events])
+
+  const stateColors = {
+    speaking: '#3D6FFF',
+    listening: '#4CAF50',
+    thinking: '#FFB74D',
+    connecting: '#9E9E9E',
+    disconnected: '#666',
+  }
+
+  const stateColor = stateColors[agentState] || '#666'
+
+  return (
+    <div style={{
+      width: 380, height: '100%',
+      background: '#0c0c18',
+      borderLeft: '1px solid rgba(255,255,255,0.06)',
+      display: 'flex', flexDirection: 'column',
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.7)',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '16px 16px 12px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+        }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: stateColor,
+            boxShadow: `0 0 8px ${stateColor}`,
+          }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#fff', fontFamily: 'var(--font)' }}>
+            Agent Spine
+          </span>
+          <span style={{
+            fontSize: 9, padding: '2px 8px', borderRadius: 10,
+            background: `${stateColor}20`, color: stateColor,
+            textTransform: 'uppercase', letterSpacing: '0.1em',
+          }}>
+            {agentState}
+          </span>
+        </div>
+
+        {/* Stack info */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
+          <span>STT: Google</span>
+          <span>TTS: Google</span>
+          <span>LLM: Gemini Flash</span>
+          <span>Router: Flash-Lite</span>
+          <span>Region: europe-west1</span>
+        </div>
+      </div>
+
+      {/* Graph visualization */}
+      <div style={{
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        fontSize: 10,
+      }}>
+        <div style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 6, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Graph Flow
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          {['STT', 'router', 'agent', 'tools', 'extract', 'synthesis', 'TTS'].map((node, i) => (
+            <div key={node} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{
+                padding: '2px 6px', borderRadius: 4,
+                background: node === 'agent' && agentState === 'thinking' ? 'rgba(255,183,77,0.2)'
+                  : node === 'synthesis' && agentState === 'speaking' ? 'rgba(61,111,255,0.2)'
+                  : 'rgba(255,255,255,0.04)',
+                border: node === 'agent' && agentState === 'thinking' ? '1px solid rgba(255,183,77,0.3)'
+                  : node === 'synthesis' && agentState === 'speaking' ? '1px solid rgba(61,111,255,0.3)'
+                  : '1px solid rgba(255,255,255,0.06)',
+                color: node === 'agent' && agentState === 'thinking' ? '#FFB74D'
+                  : node === 'synthesis' && agentState === 'speaking' ? '#6B8FFF'
+                  : 'rgba(255,255,255,0.4)',
+                fontSize: 9,
+              }}>
+                {node}
+              </span>
+              {i < 6 && <span style={{ color: 'rgba(255,255,255,0.15)' }}>→</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live events */}
+      <div ref={scrollRef} style={{
+        flex: 1, overflow: 'auto', padding: '8px 16px',
+      }}>
+        <div style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 8, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Live Events
+        </div>
+        {events.length === 0 && (
+          <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, padding: '8px 0' }}>
+            Waiting for conversation...
+          </div>
+        )}
+        {events.map((evt, i) => (
+          <div key={i} style={{
+            padding: '4px 0',
+            borderBottom: '1px solid rgba(255,255,255,0.03)',
+            display: 'flex', gap: 8,
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.2)', minWidth: 50, fontSize: 9 }}>
+              {evt.time}
+            </span>
+            <span style={{
+              color: evt.type === 'user' ? '#4CAF50'
+                : evt.type === 'agent' ? '#6B8FFF'
+                : evt.type === 'filler' ? '#FFB74D'
+                : evt.type === 'tool' ? '#CE93D8'
+                : evt.type === 'state' ? 'rgba(255,255,255,0.3)'
+                : 'rgba(255,255,255,0.5)',
+              fontSize: 10,
+            }}>
+              {evt.type === 'state' && `◆ ${evt.text}`}
+              {evt.type === 'user' && `You: ${evt.text}`}
+              {evt.type === 'agent' && `Agent: ${evt.text}`}
+              {evt.type === 'filler' && `⟡ filler: "${evt.text}"`}
+              {evt.type === 'tool' && `⚙ ${evt.text}`}
+              {evt.type === 'timing' && `⏱ ${evt.text}`}
+              {!['state', 'user', 'agent', 'filler', 'tool', 'timing'].includes(evt.type) && evt.text}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer links */}
+      <div style={{
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', gap: 8,
+      }}>
+        <a
+          href={LANGSMITH_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            flex: 1, padding: '8px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: 9, textAlign: 'center', textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Open LangSmith
+        </a>
+        <a
+          href={LIVEKIT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            flex: 1, padding: '8px', borderRadius: 8,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: 9, textAlign: 'center', textDecoration: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          LiveKit Cloud
+        </a>
+      </div>
+    </div>
+  )
+}

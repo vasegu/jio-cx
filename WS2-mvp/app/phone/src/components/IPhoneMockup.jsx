@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useAgentEvents } from '../App'
 
 /* ---------- sub-app definitions ---------- */
 const SUB_APPS = {
@@ -192,9 +193,22 @@ function VoiceContent({ onClose }) {
   const pendingUserMsgRef = useRef(null)
   const pendingAgentMsgRef = useRef(null)
 
+  // Trace context — sends events to desktop trace panel
+  const { addEvent, setAgentState: setAgentStateFn } = useAgentEvents()
+
   const agent = useVoiceAssistant()
   const agentState = agent?.state || 'connecting'
   const audioTrack = agent?.audioTrack
+
+  // Push state changes to trace panel
+  const prevState = useRef(agentState)
+  useEffect(() => {
+    if (agentState !== prevState.current) {
+      setAgentStateFn(agentState)
+      addEvent('state', agentState)
+      prevState.current = agentState
+    }
+  }, [agentState])
   const room = useRoomContext()
 
   // Map agent state to our phase
@@ -241,6 +255,8 @@ function VoiceContent({ onClose }) {
 
         if (seg.final) {
           pendingRef.current = null
+          // Emit to trace panel
+          addEvent(from, text)
         }
       }
     }
