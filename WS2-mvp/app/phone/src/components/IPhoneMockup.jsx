@@ -166,16 +166,23 @@ function VoiceScreen({ onClose }) {
   }
 
   return (
-    <LiveKitRoom
-      serverUrl={LIVEKIT_URL}
-      token={token}
-      connect={true}
-      audio={true}
-      style={{ position: 'absolute', top: 44, left: 0, right: 0, bottom: 0, zIndex: 15 }}
-    >
-      <VoiceContent onClose={onClose} />
-      <RoomAudioRenderer />
-    </LiveKitRoom>
+    <div style={{ position: 'absolute', top: 44, left: 0, right: 0, bottom: 0, zIndex: 15 }}>
+      <LiveKitRoom
+        serverUrl={LIVEKIT_URL}
+        token={token}
+        connect={true}
+        audio={true}
+        onDisconnected={() => {
+          console.log('[VoiceScreen] Room disconnected')
+          setToken(null)
+          tokenFetched.current = false
+        }}
+        style={{ height: '100%', background: 'transparent' }}
+      >
+        <VoiceContent onClose={onClose} />
+        <RoomAudioRenderer />
+      </LiveKitRoom>
+    </div>
   )
 }
 
@@ -250,126 +257,184 @@ function VoiceContent({ onClose }) {
 
   return (
     <div style={{
-      position: 'absolute', top: 44, left: 0, right: 0, bottom: 0, zIndex: 15,
+      height: '100%',
       background: 'linear-gradient(180deg, #061654 0%, #0a1a3a 40%, #0d0d1a 100%)',
       display: 'flex', flexDirection: 'column',
       fontFamily: 'var(--font)',
     }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', padding: '16px 16px 0', position: 'relative' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Buddy</div>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Personal AI Assistant</div>
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: 12, right: 12,
-            background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
-            width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-
-      {/* Voice Visualizer */}
-      <div
-        onClick={handleOrbTap}
-        style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: '24px 20px 8px', cursor: 'pointer',
-          '--lk-fg': '#0F3CC9',
-          '--lk-va-bg': 'rgba(15,60,201,0.15)',
-        }}
-      >
-        <BarVisualizer
-          state={agentState}
-          trackRef={audioTrack}
-          barCount={7}
-          style={{ width: '100%', height: 64 }}
-        />
+      {/* Visualizer + Status — top section */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        padding: '20px 20px 0',
+        '--lk-fg': '#3D6FFF',
+        '--lk-va-bg': 'rgba(15,60,201,0.08)',
+      }}>
+        {/* Glow backdrop */}
         <div style={{
-          marginTop: 8, fontSize: 10,
-          color: 'rgba(255,255,255,0.4)',
+          position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
+          width: 200, height: 200, borderRadius: '50%',
+          background: phase === 'speaking'
+            ? 'radial-gradient(circle, rgba(15,60,201,0.25) 0%, transparent 70%)'
+            : phase === 'listening'
+            ? 'radial-gradient(circle, rgba(15,60,201,0.12) 0%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(15,60,201,0.06) 0%, transparent 70%)',
+          transition: 'background 0.6s ease',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Jio branding */}
+        <div style={{
+          fontSize: 22, fontWeight: 800, color: '#fff',
+          letterSpacing: '0.08em', marginBottom: 2,
+          fontFamily: 'var(--font)',
         }}>
-          {phase === 'connecting' ? 'Connecting...'
-            : phase === 'listening' ? 'Listening...'
-            : phase === 'thinking' ? 'Thinking...'
-            : phase === 'speaking' ? 'Buddy is speaking...'
-            : 'Tap to mute/unmute'}
+          jio
+        </div>
+        <div style={{
+          fontSize: 9, color: 'rgba(255,255,255,0.3)',
+          textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 16,
+        }}>
+          Home Assistant
+        </div>
+
+        {/* BarVisualizer — large, centered with glow ring */}
+        <div style={{
+          width: '100%', height: 100, position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <BarVisualizer
+            state={agentState}
+            trackRef={audioTrack}
+            barCount={7}
+            style={{
+              width: '85%', height: '100%',
+              borderRadius: 16,
+              background: 'transparent',
+              gap: '6px',
+              filter: phase === 'speaking'
+                ? 'drop-shadow(0 0 12px rgba(61,111,255,0.4))'
+                : 'drop-shadow(0 0 6px rgba(61,111,255,0.15))',
+              transition: 'filter 0.4s ease',
+            }}
+          />
+        </div>
+
+        {/* Status pill */}
+        <div style={{
+          marginTop: 12, marginBottom: 8,
+          padding: '4px 14px', borderRadius: 20,
+          background: phase === 'speaking' ? 'rgba(15,60,201,0.2)'
+            : phase === 'listening' ? 'rgba(255,255,255,0.06)'
+            : phase === 'thinking' ? 'rgba(255,200,50,0.1)'
+            : 'rgba(255,255,255,0.04)',
+          border: phase === 'speaking' ? '1px solid rgba(15,60,201,0.3)'
+            : '1px solid rgba(255,255,255,0.06)',
+          transition: 'all 0.3s ease',
+        }}>
+          <span style={{
+            fontSize: 9, fontWeight: 600,
+            color: phase === 'speaking' ? '#6B8FFF'
+              : phase === 'thinking' ? 'rgba(255,200,50,0.7)'
+              : 'rgba(255,255,255,0.4)',
+            textTransform: 'uppercase', letterSpacing: '0.12em',
+          }}>
+            {phase === 'connecting' ? 'connecting'
+              : phase === 'listening' ? 'listening'
+              : phase === 'thinking' ? 'thinking'
+              : phase === 'speaking' ? 'speaking'
+              : 'ready'}
+          </span>
         </div>
       </div>
 
-      {/* Message Transcript */}
+      {/* Transcript — scrollable middle section */}
       <div ref={scrollRef} style={{
-        flex: 1, overflow: 'auto', padding: '0 14px 8px',
-        display: 'flex', flexDirection: 'column', gap: 8,
+        flex: 1, overflow: 'auto', padding: '8px 16px',
+        display: 'flex', flexDirection: 'column', gap: 6,
       }}>
         {messages.length === 0 && (
           <div style={{
-            textAlign: 'center', padding: '24px 16px',
-            color: 'rgba(255,255,255,0.25)', fontSize: 11,
+            textAlign: 'center', padding: '32px 20px',
+            color: 'rgba(255,255,255,0.2)', fontSize: 11,
+            lineHeight: 1.6,
           }}>
             {phase === 'connecting'
-              ? 'Connecting to assistant...'
-              : 'Tap the orb and speak to start a conversation'}
+              ? 'Connecting to your assistant...'
+              : 'Say hello to get started'}
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={i} style={{
             alignSelf: msg.from === 'user' ? 'flex-end' : 'flex-start',
-            maxWidth: '85%',
-            animation: 'fadeUp 0.3s ease',
+            maxWidth: '82%',
           }}>
-            {msg.text && (
-              <div style={{
-                background: msg.from === 'user' ? 'rgba(77,123,255,0.2)' : 'rgba(255,255,255,0.06)',
-                border: msg.from === 'user' ? '1px solid rgba(77,123,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                color: msg.from === 'user' ? '#fff' : 'rgba(255,255,255,0.9)',
-                borderRadius: msg.from === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-                padding: '8px 12px',
-                fontSize: 11, lineHeight: 1.4, fontFamily: 'var(--font)',
-              }}>
-                {msg.text}
-              </div>
-            )}
-            {/* Tool call badges */}
-            {msg.tools && msg.tools.length > 0 && (
-              <div style={{
-                display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4,
-                paddingLeft: 4,
-              }}>
-                {msg.tools.map((tool, ti) => (
-                  <span key={ti} style={{
-                    fontSize: 8, fontWeight: 600,
-                    color: 'rgba(77,123,255,0.7)',
-                    background: 'rgba(77,123,255,0.1)',
-                    border: '1px solid rgba(77,123,255,0.15)',
-                    padding: '2px 6px',
-                    borderRadius: 4,
-                    fontFamily: 'var(--font)',
-                  }}>
-                    {tool}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div style={{
+              background: msg.from === 'user'
+                ? 'rgba(61,111,255,0.15)'
+                : 'rgba(255,255,255,0.04)',
+              border: msg.from === 'user'
+                ? '1px solid rgba(61,111,255,0.25)'
+                : '1px solid rgba(255,255,255,0.06)',
+              color: msg.from === 'user' ? '#c8d8ff' : 'rgba(255,255,255,0.85)',
+              borderRadius: msg.from === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+              padding: '8px 14px',
+              fontSize: 11, lineHeight: 1.5, fontFamily: 'var(--font)',
+            }}>
+              {msg.text}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Status */}
+      {/* Bottom controls */}
       <div style={{
-        textAlign: 'center', padding: '8px 16px 16px',
-        fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        gap: 20, padding: '10px 20px 16px',
       }}>
-        {phase === 'connecting' ? 'Connecting...'
-          : phase === 'listening' ? 'Listening...'
-          : phase === 'thinking' ? 'Thinking...'
-          : phase === 'speaking' ? 'Buddy is speaking...'
-          : 'Tap to speak'}
+        {/* Mute toggle */}
+        <button
+          onClick={handleOrbTap}
+          style={{
+            width: 44, height: 44, borderRadius: '50%',
+            background: room?.localParticipant?.isMicrophoneEnabled
+              ? 'rgba(61,111,255,0.2)' : 'rgba(255,80,80,0.2)',
+            border: room?.localParticipant?.isMicrophoneEnabled
+              ? '1.5px solid rgba(61,111,255,0.4)' : '1.5px solid rgba(255,80,80,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all 0.2s ease',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke={room?.localParticipant?.isMicrophoneEnabled ? '#6B8FFF' : '#ff5050'}
+            strokeWidth="2" strokeLinecap="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            {!room?.localParticipant?.isMicrophoneEnabled && (
+              <line x1="1" y1="1" x2="23" y2="23" stroke="#ff5050"/>
+            )}
+          </svg>
+        </button>
+
+        {/* End call */}
+        <button
+          onClick={() => {
+            if (room) room.disconnect()
+            onClose()
+          }}
+          style={{
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'rgba(255,60,60,0.15)',
+            border: '1.5px solid rgba(255,60,60,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all 0.2s ease',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4444" strokeWidth="2" strokeLinecap="round">
+            <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/>
+            <line x1="23" y1="1" x2="1" y2="23"/>
+          </svg>
+        </button>
       </div>
     </div>
   )
