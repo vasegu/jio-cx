@@ -67,27 +67,50 @@ export default function TracePanel({ events = [], agentState = 'disconnected', r
         </div>
       </div>
 
-      {/* Live graph visualization — LangGraphics iframe */}
+      {/* Graph flow — minimal node indicators */}
       <div style={{
+        padding: '12px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        position: 'relative',
       }}>
-        <div style={{
-          padding: '8px 16px 4px', fontSize: 9,
-          color: 'rgba(255,255,255,0.3)',
-          textTransform: 'uppercase', letterSpacing: '0.1em',
-        }}>
-          Live Graph
+        <div style={{ color: 'rgba(255,255,255,0.3)', marginBottom: 8, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Spine Pipeline
         </div>
-        <iframe
-          src="http://localhost:8764"
-          style={{
-            width: '100%', height: 220,
-            border: 'none',
-            background: '#0c0c18',
-          }}
-          title="LangGraph Visualization"
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            { id: 'stt', label: 'STT', swap: 'Google / Sarvam / Deepgram' },
+            { id: 'router', label: 'Router', swap: 'Flash-Lite (swappable)' },
+            { id: 'agent', label: 'Agent', swap: 'Flash (swappable)' },
+            { id: 'tools', label: 'Tools', swap: 'RAG · Diagnostics · Plans' },
+            { id: 'synthesis', label: 'Synthesis', swap: 'Flash-Lite (swappable)' },
+            { id: 'tts', label: 'TTS', swap: 'Google / Sarvam / ElevenLabs' },
+          ].map((node, i, arr) => (
+            <div key={node.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }} title={node.swap}>
+              <div style={{
+                padding: '4px 8px', borderRadius: 6,
+                background: (node.id === 'agent' && agentState === 'thinking') ? 'rgba(255,183,77,0.15)'
+                  : (node.id === 'synthesis' && agentState === 'speaking') ? 'rgba(61,111,255,0.15)'
+                  : (node.id === 'stt' && agentState === 'listening') ? 'rgba(76,175,80,0.15)'
+                  : 'rgba(255,255,255,0.03)',
+                border: (node.id === 'agent' && agentState === 'thinking') ? '1px solid rgba(255,183,77,0.25)'
+                  : (node.id === 'synthesis' && agentState === 'speaking') ? '1px solid rgba(61,111,255,0.25)'
+                  : (node.id === 'stt' && agentState === 'listening') ? '1px solid rgba(76,175,80,0.25)'
+                  : '1px solid rgba(255,255,255,0.06)',
+                transition: 'all 0.3s ease',
+                fontSize: 9, fontWeight: 500,
+                color: (node.id === 'agent' && agentState === 'thinking') ? '#FFB74D'
+                  : (node.id === 'synthesis' && agentState === 'speaking') ? '#6B8FFF'
+                  : (node.id === 'stt' && agentState === 'listening') ? '#66BB6A'
+                  : 'rgba(255,255,255,0.35)',
+              }}>
+                {node.label}
+              </div>
+              {i < arr.length - 1 && <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: 8 }}>→</span>}
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 8, color: 'rgba(255,255,255,0.15)' }}>
+          hover nodes for swappable providers
+        </div>
       </div>
 
       {/* Live events */}

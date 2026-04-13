@@ -364,17 +364,7 @@ def build_graph(
     graph.add_edge("tools", "agent")
     graph.add_edge("extract", END)
 
-    compiled = graph.compile()
-
-    # Live graph visualization — serves on localhost:8764
-    try:
-        from langgraphics import watch
-        compiled = watch(compiled, open_browser=False, theme="dark")
-        log.info("[GRAPH] LangGraphics visualization on http://localhost:8764")
-    except ImportError:
-        log.info("[GRAPH] langgraphics not installed, skipping visualization")
-
-    return compiled
+    return graph.compile()
 
 
 if __name__ == "__main__":
