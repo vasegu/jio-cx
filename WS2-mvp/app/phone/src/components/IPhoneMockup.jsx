@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAgentEvents } from '../App'
+import {
+  LiveKitRoom,
+  useVoiceAssistant,
+  BarVisualizer,
+  RoomAudioRenderer,
+  useRoomContext,
+} from '@livekit/components-react'
+import '@livekit/components-styles'
+import { RoomEvent } from 'livekit-client'
 
 /* ---------- sub-app definitions ---------- */
 const SUB_APPS = {
@@ -90,18 +99,8 @@ const SERVICES = [
 ]
 
 /* ---------- LiveKit config ---------- */
-const LIVEKIT_URL = 'wss://jiobuddy-y3inkf8x.livekit.cloud'
-const TOKEN_URL = 'http://localhost:8089/token'
-
-import {
-  LiveKitRoom,
-  useVoiceAssistant,
-  BarVisualizer,
-  RoomAudioRenderer,
-  useRoomContext,
-} from '@livekit/components-react'
-import '@livekit/components-styles'
-import { RoomEvent } from 'livekit-client'
+const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || 'wss://jiobuddy-y3inkf8x.livekit.cloud'
+const TOKEN_URL = import.meta.env.VITE_TOKEN_URL || '/api/token'
 
 /* ---------- Audio helpers ---------- */
 function floatTo16BitPCM(float32Array) {
@@ -210,13 +209,14 @@ function VoiceContent({ onClose }) {
     }
   }, [agentState])
 
+  const room = useRoomContext()
+
   // Push room ID for trace links
   useEffect(() => {
     if (room?.sid) {
       setRoomId(room.sid)
     }
   }, [room?.sid])
-  const room = useRoomContext()
 
   // Map agent state to our phase
   const phase = agentState === 'speaking' ? 'speaking'

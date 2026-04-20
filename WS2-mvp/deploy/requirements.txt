@@ -1,0 +1,25 @@
+# Core
+livekit-agents~=1.5
+
+# VAD + Turn detection
+livekit-plugins-silero~=1.5
+livekit-plugins-turn-detector~=1.5
+
+# STT/TTS (Google - no extra API keys needed with Vertex AI)
+livekit-plugins-google~=1.5
+
+# LangGraph orchestration
+livekit-plugins-langchain~=1.5
+langgraph>=0.2
+langchain-google-genai
+
+# RAG (Vertex AI corpus)
+google-cloud-aiplatform>=1.60.0
+
+# Tracing
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-gcp-trace
+
+# Env
+python-dotenv
